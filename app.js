@@ -30,7 +30,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/p/:userId', function(req, res) {
-  res.send("userId is set to " + req.params.tagId);
+  res.send("userId is set to " + req.params.userId);
 });
 
 
