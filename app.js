@@ -30,6 +30,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/:user', function(req, res) {
+  user = req.params.user;
   res.send("userId is set to " + req.params.user);
 });
 
