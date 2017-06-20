@@ -29,6 +29,11 @@ app.get('/', function(req, res) {
   return res.send('Madden Data')
 });
 
+app.get('/p/:userId', function(req, res) {
+  res.send("userId is set to " + req.params.tagId);
+});
+
+
 app.post('/:platform/:leagueId/leagueteams', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
