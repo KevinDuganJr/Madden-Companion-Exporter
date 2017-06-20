@@ -34,7 +34,7 @@ app.get('/:user', function(req, res) {
 });
 
 
-app.post('/:platform/:leagueId/leagueteams', (req, res) => {
+app.post('/:user/:platform/:leagueId/leagueteams', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
   const {user, platform, leagueId} = req.params;
