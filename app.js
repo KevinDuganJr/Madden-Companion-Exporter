@@ -29,7 +29,7 @@ app.get('/', function(req, res) {
   return res.send('Madden Data')
 });
 
-app.get('/p/:user', function(req, res) {
+app.get('/:user', function(req, res) {
   res.send("userId is set to " + req.params.user);
 });
 
@@ -38,8 +38,8 @@ app.post('/:platform/:leagueId/leagueteams', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
   const {user, platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
-//  const dataRef = ref.child(`req.params.userId/${user}/${platform}/${leagueId}/leagueteams`);
+ // const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
+  const dataRef = ref.child(`data/${user}/${platform}/${leagueId}/leagueteams`);
   const {body: {leagueTeamInfoList}} = req;
 
   dataRef.set({
