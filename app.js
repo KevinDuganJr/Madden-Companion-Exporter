@@ -34,7 +34,7 @@ app.get('/', function(req, res) {
 app.post('/:user/:platform/:leagueId/leagueteams', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
-  const {user, platform, leagueId} = req.params;
+  const {platform, leagueId} = req.params;
   const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
   //const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
   const {body: {leagueTeamInfoList}} = req;
