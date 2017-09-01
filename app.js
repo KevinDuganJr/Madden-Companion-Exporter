@@ -35,7 +35,7 @@ app.get('/:user', function(req, res) {
 app.get('/delete/:user', function(req, res) {
   const db = admin.database();
   const ref = db.ref();
-  const dataRef = ref.child(`data\` + req.params.user);
+  const dataRef = ref.child(`data/` + req.params.user);
   dataRef.remove();
   return res.send('Madden Data Cleared for ' + req.params.user);
 });
