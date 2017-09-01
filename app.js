@@ -5,7 +5,6 @@ var admin = require("firebase-admin");
 const app = express();
 
 
-
 // TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
 const serviceAccount = require("./dugan-760bc-firebase-adminsdk-bguij-42efe32ea8.json");
@@ -42,14 +41,13 @@ app.get('/delete', function(req, res) {
 
 
 
-app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
+app.post('/:platform/:leagueId/leagueteams', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/leagueteams`);
+  const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
   const {body: {leagueTeamInfoList}} = req;
-  const { params: { username, leagueId } } = req;  
-
+  
 
   dataRef.set({
     leagueTeamInfoList
