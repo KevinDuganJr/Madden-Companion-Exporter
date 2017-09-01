@@ -28,7 +28,7 @@ function capitalizeFirstLetter(string) {
 
 app.get('/:user', function(req, res) {
   //return res.send('Madden Data')
-  return res.send("username is set to " + req.query.user);
+  return res.send("username is set to " + req.params.user);
 });
 
 //Clear firebase database
