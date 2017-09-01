@@ -132,9 +132,8 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
   const db = admin.database();
-  const ref = db.ref();
-  const { params: { username, leagueId } } = req;  
-  const {platform, leagueId, teamId} = req.params;
+  const ref = db.ref();  
+  const {username, platform, leagueId, teamId} = req.params;
   const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/team/${teamId}`);
   const {body: {rosterInfoList}} = req;
   res.sendStatus(202);
