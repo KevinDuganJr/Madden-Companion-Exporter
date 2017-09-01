@@ -35,7 +35,7 @@ app.get('/:user', function(req, res) {
 app.get('/delete/:user', function(req, res) {
   const db = admin.database();
   const ref = db.ref();
-  const dataRef = ref.child(`data/` + req.params.user);
+  const dataRef = ref.child(req.params.user);
   dataRef.remove();
   return res.send('Madden Data Cleared for ' + req.params.user);
 });
@@ -47,7 +47,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
   const ref = db.ref();
   const { params: { username } } = req;  
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/leagueteams`);
+  const dataRef = ref.child(`${username}/data/${platform}/${leagueId}/leagueteams`);
   const {body: {leagueTeamInfoList}} = req;
   
 
@@ -62,7 +62,7 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
   const ref = db.ref();
   const { params: { username } } = req;  
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/standings`);
+  const dataRef = ref.child(`${username}/data/${platform}/${leagueId}/standings`);
   const {body: {teamStandingInfoList}} = req;
 
   dataRef.set({
@@ -76,7 +76,7 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
   const ref = db.ref();
   const { params: { username } } = req;  
   const {platform, leagueId, weekType, weekNumber, dataType} = req.params;
-  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}`);
+  const dataRef = ref.child(`${username}/data/${platform}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}`);
 
   // method=POST path="/platform/leagueId/week/reg/1/defense"
   // method=POST path="/platform/leagueId/week/reg/1/kicking"
@@ -123,7 +123,7 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
   const ref = db.ref();
   const { params: { username } } = req;  
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/freeagents`);
+  const dataRef = ref.child(`${username}/data/${platform}/${leagueId}/freeagents`);
   const {body: {rosterInfoList}} = req;
   res.sendStatus(202);
   dataRef.set({
@@ -142,7 +142,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
   const ref = db.ref();
   const { params: { username } } = req;  
   const {platform, leagueId, teamId} = req.params;
-  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/team/${teamId}`);
+  const dataRef = ref.child(`${username}/data/${platform}/${leagueId}/team/${teamId}`);
   const {body: {rosterInfoList}} = req;
   res.sendStatus(202);
   dataRef.set({
