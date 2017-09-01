@@ -41,11 +41,12 @@ app.get('/delete', function(req, res) {
 
 
 
-app.post('/:platform/:leagueId/leagueteams', (req, res) => {
+app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
+  const { params: { username, leagueId } } = req;  
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
+  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/leagueteams`);
   const {body: {leagueTeamInfoList}} = req;
   
 
@@ -55,11 +56,12 @@ app.post('/:platform/:leagueId/leagueteams', (req, res) => {
   res.sendStatus(200);
 });
 
-app.post('/:platform/:leagueId/standings', (req, res) => {
+app.post('/:username/:platform/:leagueId/standings', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
+  const { params: { username, leagueId } } = req;  
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/standings`);
+  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/standings`);
   const {body: {teamStandingInfoList}} = req;
 
   dataRef.set({
@@ -68,11 +70,12 @@ app.post('/:platform/:leagueId/standings', (req, res) => {
   res.sendStatus(200);
 });
 
-app.post('/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', (req, res) => {
+app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
+  const { params: { username, leagueId } } = req;  
   const {platform, leagueId, weekType, weekNumber, dataType} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}`);
+  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}`);
 
   // method=POST path="/platform/leagueId/week/reg/1/defense"
   // method=POST path="/platform/leagueId/week/reg/1/kicking"
@@ -114,11 +117,12 @@ app.post('/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', (req, res)
 
 // ROSTERS
 
-app.post('/:platform/:leagueId/freeagents/roster', (req, res) => {
+app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
+  const { params: { username, leagueId } } = req;  
   const {platform, leagueId} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/freeagents`);
+  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/freeagents`);
   const {body: {rosterInfoList}} = req;
   res.sendStatus(202);
   dataRef.set({
@@ -126,11 +130,12 @@ app.post('/:platform/:leagueId/freeagents/roster', (req, res) => {
   });
 });
 
-app.post('/:platform/:leagueId/team/:teamId/roster', (req, res) => {
+app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
   const db = admin.database();
   const ref = db.ref();
+  const { params: { username, leagueId } } = req;  
   const {platform, leagueId, teamId} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/team/${teamId}`);
+  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/team/${teamId}`);
   const {body: {rosterInfoList}} = req;
   res.sendStatus(202);
   dataRef.set({
