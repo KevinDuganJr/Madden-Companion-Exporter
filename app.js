@@ -44,7 +44,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
   const ref = db.ref();
   const { params: { username } } = req;  
   const {platform, leagueId, teamId} = req.params;
-  const dataRef = ref.child(`data/${platform}/${leagueId}/team/${teamId}`);
+  const dataRef = ref.child(`data/${username}/${platform}/${leagueId}/team/${teamId}`);
   const {body: {rosterInfoList}} = req;
   res.sendStatus(202);
   dataRef.set({
