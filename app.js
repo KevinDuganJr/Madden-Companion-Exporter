@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var admin = require("firebase-admin");
 
 const app = express();
-const { params: { username, leagueId } } = req;  
+
 
 
 // TODO: Enter the path to your service account json file
