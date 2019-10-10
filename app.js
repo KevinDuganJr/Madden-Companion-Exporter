@@ -132,25 +132,11 @@ app.post(
 
 // ROSTERS
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-    const db = admin.database();
-    const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-        const { rosterInfoList } = JSON.parse(body);
-        const {params: { username, leagueId }} = req;
-
-        rosterInfoList.forEach(player => { const teamRef = ref.child(`data/${username}/data/newfreeagents`); teamRef.update(player); });
-
-        res.sendStatus(200);
-    });
-
+  res.sendStatus(200);
 });
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
-     
-        res.sendStatus(200);
-   
+  res.sendStatus(200);
 });
 
 app.listen(app.get('port'), () =>
