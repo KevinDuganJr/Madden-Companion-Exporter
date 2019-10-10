@@ -165,6 +165,30 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     
 });
  
+app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
+    const db = admin.database();
+    const ref = db.ref();
+    const {
+        params: { username, leagueId, teamId }
+    } = req;
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    req.on('end', () => {
+        const { rosterInfoList: players } = JSON.parse(body);
+        const dataRef = ref.child(`data/${username}/${leagueId}/team/${teamId}/`);
+        dataRef.set(players, error => {
+            if (error) {
+                console.log('Data could not be saved.' + error);
+            } else {
+                console.log('Data saved successfully.');
+            }
+        });
+        res.sendStatus(200);
+    });
+});
+
 
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
