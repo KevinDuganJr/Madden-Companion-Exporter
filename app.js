@@ -3,7 +3,6 @@ const admin = require("firebase-admin");
 
 const app = express();
 
-
 // TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
 const serviceAccount = require("./dugan-760bc-firebase-adminsdk-bguij-42efe32ea8.json");
@@ -14,27 +13,10 @@ admin.initializeApp({
   databaseURL: "https://dugan-760bc.firebaseio.com"
 });
 
-// Setup
-// Change the default port here if you want for local dev.
-app.set('port', (process.env.PORT || 5000));
+app.set('port', (process.env.PORT || 3001));
 
-
-app.get('/:user', function(req, res) {
-  //return res.send('Madden Data')
-  return res.send("username is set to " + req.params.user);
-});
-
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-//Clear firebase database
-app.get('/delete/:user', function(req, res) {
-  const db = admin.database();
-  const ref = db.ref();
-  const dataRef = ref.child(req.params.user);
-  dataRef.remove();
-  return res.send('Madden Data Cleared for ' + req.params.user);
+app.get('*', (req, res) => {
+    res.send('Madden Companion Exporter');
 });
 
 app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
@@ -95,7 +77,9 @@ app.post(
         // "defense", "kicking", "passing", "punting", "receiving", "rushing"
         const statsPath = `${basePath}stats`;
         let body = '';
-        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
         req.on('end', () => {
             switch (dataType) {
                 case 'schedules': {
@@ -127,7 +111,9 @@ app.post(
                     break;
                 }
                 default: {
-                    const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
+                    const property = `player${capitalizeFirstLetter(
+                        dataType
+                    )}StatInfoList`;
                     const stats = JSON.parse(body)[property];
                     stats.forEach(stat => {
                         const weekRef = ref.child(
@@ -144,107 +130,51 @@ app.post(
     }
 );
 
-
 // ROSTERS
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-    // res.sendStatus(200);
-
-    // const db = admin.database();
-    // const ref = db.ref();
-    // const { params: { username } } = req;  
-    // const {platform, leagueId} = req.params;
-    // const dataRef = ref.child(`${username}/data/freeagents`);
-    // const {body: {rosterInfoList}} = req;
-    
-    // res.sendStatus(202);
-    // dataRef.set({
-    //   rosterInfoList
-    // });
-
-
-
-
-
     const db = admin.database();
     const ref = db.ref();
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
-        const { rosterInfoList: teams } = JSON.parse(body);
+        const { teamStandingInfoList: teams } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
-        teams.forEach(team => {
-            const teamRef = ref.child(`data/${username}/data/freeagents`);
-            teamRef.update(team);
-        });
+        teams.forEach(team => { const teamRef = ref.child(`data/${username}/${leagueId}/teams/${team.teamId}`); teamRef.update(team); });
 
         res.sendStatus(200);
     });
 
-
-
-
-
-
 });
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
-    res.sendStatus(200);
-    // const db = admin.database();
-    // const ref = db.ref();
-    // let body = '';
-    // req.on('data', chunk => {
-    //     body += chunk.toString();
-    // });
-    // req.on('end', () => {
-    //     const { rosterInfoList: teams } = JSON.parse(body);
-    //     const {params: { username, leagueId }} = req;
-
-    //     teams.forEach(team => {
-    //         const teamRef = ref.child(`data/${username}/team/${team.teamId}`);
-    //         teamRef.update(team);
-    //     });
-
-    //     res.sendStatus(200);
-    // });
-
-
-
-    // *** new
-    // req.on('end', () => {
-    //     const { rosterInfoList } = JSON.parse(body);
-    //     const dataRef = ref.child(
-    //         `data/${username}/${leagueId}/teams/${teamId}/roster`
-    //     );
-    //     const players = {};
-    //     rosterInfoList.forEach(player => {
-    //         players[player.rosterId] = player;
-    //     });
-    //     dataRef.set(players, error => {
-    //         if (error) {
-    //             console.log('Data could not be saved.' + error);
-    //         } else {
-    //             console.log('Data saved successfully.');
-    //         }
-    //     });
-    //     res.sendStatus(200);
-    // });
-
-
-    // *** old
-    // app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
-    //     const db = admin.database();
-    //     const ref = db.ref();
-    //     const { params: { username } } = req;  
-    //     const {platform, leagueId, teamId} = req.params;
-    //     const dataRef = ref.child(`${username}/data/team/${teamId}`);
-    //     const {body: {rosterInfoList}} = req;
-    //     res.sendStatus(202);
-    //     dataRef.set({
-    //       rosterInfoList
-    //     });
-    //   });
-
+    const db = admin.database();
+    const ref = db.ref();
+    const {
+        params: { username, leagueId, teamId }
+    } = req;
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    req.on('end', () => {
+        const { rosterInfoList } = JSON.parse(body);
+        const dataRef = ref.child(
+            `data/${username}/${leagueId}/teams/${teamId}/roster`
+        );
+        const players = {};
+        rosterInfoList.forEach(player => {
+            players[player.rosterId] = player;
+        });
+        dataRef.set(players, error => {
+            if (error) {
+                console.log('Data could not be saved.' + error);
+            } else {
+                console.log('Data saved successfully.');
+            }
+        });
+        res.sendStatus(200);
+    });
 });
 
 app.listen(app.get('port'), () =>
