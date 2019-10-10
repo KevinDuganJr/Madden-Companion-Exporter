@@ -118,41 +118,34 @@ app.post(
 
 // ROSTERS
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-  
     const db = admin.database();
     const ref = db.ref();
     const { params: { username, leagueId, teamId } } = req;
     let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
     req.on('end', () => {
-        const { rosterInfoList } = JSON.parse(body);
-        const dataRef = ref.child(`data/${username}/freeagentz`);
-        const players = {};
-        rosterInfoList.forEach(player => { players[player.rosterId] = player; });
-        dataRef.set(players, error => {
-            if (error) {
-                console.log('Data could not be saved.' + error);
-            } else {
-                console.log('Data saved successfully.');
-            }
-        });
-        res.sendStatus(200);
-    });    
-
+        const dataRef = ref.child(`data/${username}/${leagueId}/freeagents`);
+        const { gameScheduleInfoList: schedules } = JSON.parse(body);
+            dataRef.update(schedules);
+    });
+    res.sendStatus(200);
 });
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
- 
     const db = admin.database();
     const ref = db.ref();
-    const { params: { username, leagueId, teamId } } = req;
+    const {
+        params: { username, leagueId, teamId }
+    } = req;
     let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
     req.on('end', () => {
-        const { rosterInfoList } = JSON.parse(body);
-        const dataRef = ref.child(`data/${username}/teamz/${teamId}/roster`);
-        const players = {};
-        rosterInfoList.forEach(player => { players[player.rosterId] = player; });
+        const { rosterInfoList: players } = JSON.parse(body);
+        const dataRef = ref.child(`data/${username}/${leagueId}/team/${teamId}/`);
         dataRef.set(players, error => {
             if (error) {
                 console.log('Data could not be saved.' + error);
@@ -160,10 +153,9 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
                 console.log('Data saved successfully.');
             }
         });
-        res.sendStatus(200);
     });
+    res.sendStatus(200);
 });
-
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
 );
