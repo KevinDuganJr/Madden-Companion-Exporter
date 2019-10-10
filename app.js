@@ -137,10 +137,10 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
-        const { teamStandingInfoList: teams } = JSON.parse(body);
+        const { rosterInfoList } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
-        teams.forEach(team => { const teamRef = ref.child(`data/${username}/${leagueId}/teams/${team.teamId}`); teamRef.update(team); });
+        rosterInfoList.forEach(player => { const teamRef = ref.child(`data/${username}/data/newfreeagents`); teamRef.update(player); });
 
         res.sendStatus(200);
     });
@@ -148,33 +148,9 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
 });
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
-    const db = admin.database();
-    const ref = db.ref();
-    const {
-        params: { username, leagueId, teamId }
-    } = req;
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { rosterInfoList } = JSON.parse(body);
-        const dataRef = ref.child(
-            `data/${username}/${leagueId}/teams/${teamId}/roster`
-        );
-        const players = {};
-        rosterInfoList.forEach(player => {
-            players[player.rosterId] = player;
-        });
-        dataRef.set(players, error => {
-            if (error) {
-                console.log('Data could not be saved.' + error);
-            } else {
-                console.log('Data saved successfully.');
-            }
-        });
+     
         res.sendStatus(200);
-    });
+   
 });
 
 app.listen(app.get('port'), () =>
