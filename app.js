@@ -16,17 +16,12 @@ admin.initializeApp({
 
 // Setup
 // Change the default port here if you want for local dev.
-app.set('port', (process.env.PORT || 5000));
-
+app.set('port', (process.env.PORT || 3001));
 
 app.get('/:user', function(req, res) {
   //return res.send('Madden Data')
   return res.send("username is set to " + req.params.user);
 });
-
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
 
 //Clear firebase database
 app.get('/delete/:user', function(req, res) {
@@ -35,6 +30,9 @@ app.get('/delete/:user', function(req, res) {
   const dataRef = ref.child(req.params.user);
   dataRef.remove();
   return res.send('Madden Data Cleared for ' + req.params.user);
+});
+app.get('*', (req, res) => {
+    res.send('Madden Companion Exporter');
 });
 
 app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
