@@ -3,7 +3,6 @@ const admin = require("firebase-admin");
 
 const app = express();
 
-
 // TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
 const serviceAccount = require("./dugan-760bc-firebase-adminsdk-bguij-42efe32ea8.json");
@@ -14,23 +13,8 @@ admin.initializeApp({
   databaseURL: "https://dugan-760bc.firebaseio.com"
 });
 
-// Setup
-// Change the default port here if you want for local dev.
 app.set('port', (process.env.PORT || 3001));
 
-app.get('/:user', function(req, res) {
-  //return res.send('Madden Data')
-  return res.send("username is set to " + req.params.user);
-});
-
-//Clear firebase database
-app.get('/delete/:user', function(req, res) {
-  const db = admin.database();
-  const ref = db.ref();
-  const dataRef = ref.child(req.params.user);
-  dataRef.remove();
-  return res.send('Madden Data Cleared for ' + req.params.user);
-});
 app.get('*', (req, res) => {
     res.send('Madden Companion Exporter');
 });
