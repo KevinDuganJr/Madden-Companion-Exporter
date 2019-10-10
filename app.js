@@ -1,5 +1,5 @@
 const express = require('express');
-const admin = require("firebase-admin");
+const admin = require('firebase-admin');
 
 const app = express();
 
@@ -14,6 +14,21 @@ admin.initializeApp({
 });
 
 app.set('port', (process.env.PORT || 3001));
+
+// get user name
+app.get('/:user', function(req, res) {
+  //return res.send('Madden Data')
+  return res.send("username is set to " + req.params.user);
+});
+
+// delete users data
+app.get('/delete/:user', function(req, res) {
+  const db = admin.database();
+  const ref = db.ref();
+  const dataRef = ref.child(req.params.user);
+  dataRef.remove();
+  return res.send('Madden Data Cleared for ' + req.params.user);
+});
 
 app.get('*', (req, res) => {
     res.send('Madden Companion Exporter');
@@ -131,9 +146,9 @@ app.post(
 );
 
 // ROSTERS
-app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-    res.sendStatus(200);
-});
+//app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
+//    res.sendStatus(200);
+//});
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     const db = admin.database();
