@@ -40,13 +40,11 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     });
     req.on('end', () => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
-        const {params: { username, leagueId }} = req;
+        const { params: { username, leagueId } } = req;
 
-        teams.forEach(team => {
-            const teamRef = ref.child(`data/${username}/${leagueId}/teams/${team.teamId}`);
-            teamRef.update(team);
-        });
-
+        const teamRef = ref.child(`data/${username}/${leagueId}/team/leagueTeamInfoList`);
+        teamRef.update(teams);
+        
         res.sendStatus(200);
     });
 });
