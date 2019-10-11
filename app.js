@@ -29,6 +29,8 @@ app.get('/delete/:user', function(req, res) {
     dataRef.remove();
     return res.send('Madden Data Cleared for ' + req.params.user);
 });
+
+// league teams
 app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
@@ -49,6 +51,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     });
 });
 
+// standings
 app.post('/:username/:platform/:leagueId/standings', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
@@ -71,10 +74,12 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
     });
 });
 
+// capitalize first letter
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+// stats schedules
 app.post(
     '/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType',
     (req, res) => {
@@ -140,7 +145,7 @@ app.post(
     }
 );
 
-// ROSTERS
+// free agents
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
@@ -171,6 +176,7 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     });    
 });
 
+// team rosters
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
