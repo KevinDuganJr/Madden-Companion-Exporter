@@ -132,7 +132,6 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
 
 // ROSTERS
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-    res.sendStatus(200);
     const db = admin.database();
     const ref = db.ref();
     const { params: { username, leagueId, teamId } } = req;
@@ -145,11 +144,9 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
 
         res.sendStatus(202);
     });
-
 });
 
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
-    res.sendStatus(200);
     const db = admin.database();
     const ref = db.ref();
     const { params: { username, leagueId, teamId } } = req;
