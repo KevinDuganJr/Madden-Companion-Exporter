@@ -30,20 +30,17 @@ app.get('/delete/:user', function(req, res) {
     return res.send('Madden Data Cleared for ' + req.params.user);
 });
 
-
 app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
+        const dataRef = ref.child(`${username}/data/leagueteams`);
         const { leagueTeamInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
-        teams.forEach(team => {
-            const teamRef = ref.child(`${username}/data/leagueteams`);
-            teamRef.update(team);
-        });
-        res.sendStatus(200);
+        dataRef.update(teams);
+
+        res.sendStatus(202);
     });
 });
 
@@ -56,14 +53,13 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
     });
     req.on('end', () => {
         const { teamStandingInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
-        teams.forEach(team => {
-            const teamRef = ref.child(`${username}/data/standings`);
-            teamRef.update(team);
-        });
-        res.sendStatus(200);
+        const dataRef = ref.child(`${username}/data/standings`);
+        dataRef.update(teams);
+        
+        res.sendStatus(202);
     });
 });
+
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -137,7 +133,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
-        const dataRef = ref.child(`/data/${username}/team/${teamId}/rosterInfoList`);
+        const dataRef = ref.child(`data/${username}/team/${teamId}/rosterInfoList`);
         const { rosterInfoList: players } = JSON.parse(body);
         dataRef.update(players);
     });
