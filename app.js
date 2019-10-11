@@ -118,7 +118,7 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
-        const dataRef = ref.child(`data/${username}/freeagents/rosterInfoList`);
+        const dataRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
         const { rosterInfoList: players } = JSON.parse(body);
         dataRef.update(players);
     });
@@ -133,7 +133,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
-        const dataRef = ref.child(`data/${username}/team/${teamId}/rosterInfoList`);
+        const dataRef = ref.child(`${username}/data/team/${teamId}/rosterInfoList`);
         const { rosterInfoList: players } = JSON.parse(body);
         dataRef.update(players);
     });
