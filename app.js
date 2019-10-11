@@ -14,7 +14,7 @@ admin.initializeApp({
     databaseURL: "https://dugan-760bc.firebaseio.com"
 });
 
-app.set('port', (process.env.PORT || 3001));
+app.set('port', (process.env.PORT || 5000));
 
 // get user 
 app.get('/:user', function(req, res) {
