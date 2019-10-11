@@ -40,7 +40,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         dataRef.update(teams);
 
-        res.sendStatus(202);
+        res.sendStatus(200);
     });
 });
 
@@ -56,7 +56,7 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
         const dataRef = ref.child(`${username}/data/standings`);
         dataRef.update(teams);
         
-        res.sendStatus(202);
+        res.sendStatus(200);
     });
 });
 
@@ -106,7 +106,7 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
                 break;
             }
         }
-        res.sendStatus(202);
+        res.sendStatus(200);
     });
 });
 
@@ -122,7 +122,7 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
         const { rosterInfoList: players } = JSON.parse(body);
         dataRef.update(players);
     });
-    res.sendStatus(202);
+    res.sendStatus(200);
 });
 
 // Team Rosters
@@ -137,7 +137,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
         const { rosterInfoList: players } = JSON.parse(body);
         dataRef.update(players);
     });
-    res.sendStatus(202);
+    res.sendStatus(200);
 });
 
 app.listen(app.get('port'), () =>
