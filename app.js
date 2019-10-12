@@ -42,7 +42,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
 
-        const teamRef = ref.child(`data/${username}/${leagueId}/team/leagueTeamInfoList`);
+        const teamRef = ref.child(`${username}/data/team/leagueTeamInfoList`);
         teamRef.update(teams);
         
         res.sendStatus(200);
@@ -61,7 +61,7 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
         const { teamStandingInfoList: teams } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
-        const teamRef = ref.child(`data/${username}/${leagueId}/standings/teamStandingInfoList`);
+        const teamRef = ref.child(`${username}/data/standings/teamStandingInfoList`);
         teamRef.update(teams);
 
         res.sendStatus(200);
@@ -123,19 +123,25 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    const {
-        params: { username, leagueId, teamId }
-    } = req;
+    const { params: { username, leagueId } } = req;
     let body = '';
     req.on('data', chunk => {
         body += chunk.toString();
     });
     req.on('end', () => {
-        const weekRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
-        const { rosterInfoList: players } = JSON.parse(body);
-        weekRef.update(players);        
+        const { rosterInfoList } = JSON.parse(body);
+        const dataRef = ref.child(`${username}/data/freeagents`);
+        const players = {};
+        rosterInfoList.forEach(player => { players[player.rosterId] = player; });
+        dataRef.set(players, error => {
+            if (error) {
+                console.log('Data could not be saved.' + error);
+            } else {
+                console.log('Data saved successfully.');
+            }
+        });
         res.sendStatus(200);
-    });    
+    });   
 });
 
 // team rosters
