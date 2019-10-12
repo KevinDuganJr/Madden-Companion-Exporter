@@ -110,20 +110,13 @@ app.post(
                     break;
                 }
                 default: {
-                    const property = `player${capitalizeFirstLetter(
-                        dataType
-                    )}StatInfoList`;
+                    const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
+                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${property}`);
                     const stats = JSON.parse(body)[property];
-                    stats.forEach(stat => {
-                        const weekRef = ref.child(
-                            `${statsPath}/${weekType}/${weekNumber}/${stat.teamId}/player-stats/${stat.rosterId}`
-                        );
-                        weekRef.update(stat);
-                    });
+                    weekRef.update(stats);
                     break;
                 }
             }
-
             res.sendStatus(200);
         });
     }
