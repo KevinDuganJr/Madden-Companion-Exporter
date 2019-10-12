@@ -104,13 +104,9 @@ app.post(
                     break;
                 }
                 case 'defense': {
+                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/playerDefensiveStatInfoList`);
                     const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
-                    defensiveStats.forEach(stat => {
-                        const weekRef = ref.child(
-                            `${statsPath}/${weekType}/${weekNumber}/${stat.teamId}/player-stats/${stat.rosterId}`
-                        );
-                        weekRef.update(stat);
-                    });
+                    weekRef.update(defensiveStats);
                     break;
                 }
                 default: {
