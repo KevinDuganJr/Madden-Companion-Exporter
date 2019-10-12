@@ -111,7 +111,7 @@ app.post(
                 }
                 default: {
                     const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
-                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${property}`);
+                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/${property}`);
                     const stats = JSON.parse(body)[property];
                     weekRef.update(stats);
                     break;
