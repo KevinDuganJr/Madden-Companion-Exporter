@@ -131,21 +131,9 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
         body += chunk.toString();
     });
     req.on('end', () => {
-        const { rosterInfoList } = JSON.parse(body);
-        const dataRef = ref.child(
-            `data/${username}/${leagueId}/freeagents`
-        );
-        const players = {};
-        rosterInfoList.forEach(player => {
-            players[player.rosterId] = player;
-        });
-        dataRef.set(players, error => {
-            if (error) {
-                console.log('Data could not be saved.' + error);
-            } else {
-                console.log('Data saved successfully.');
-            }
-        });
+        const weekRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
+        const { rosterInfoList: players } = JSON.parse(body);
+        weekRef.update(players);        
         res.sendStatus(200);
     });    
 });
