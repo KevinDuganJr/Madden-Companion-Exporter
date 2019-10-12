@@ -92,21 +92,15 @@ app.post(
         req.on('end', () => {
             switch (dataType) {
                 case 'schedules': {
-                    const weekRef = ref.child(
-                        `${basePath}schedules/${weekType}/${weekNumber}`
-                    );
+                    const weekRef = ref.child(`${basePath}schedules/${weekType}/${weekNumber}`);
                     const { gameScheduleInfoList: schedules } = JSON.parse(body);
                     weekRef.update(schedules);
                     break;
                 }
                 case 'teamstats': {
+                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/teamStatInfoList`); 
                     const { teamStatInfoList: teamStats } = JSON.parse(body);
-                    teamStats.forEach(stat => {
-                        const weekRef = ref.child(
-                            `${statsPath}/${weekType}/${weekNumber}/${stat.teamId}/team-stats`
-                        );
-                        weekRef.update(stat);
-                    });
+                    weekRef.update(teamStats);
                     break;
                 }
                 case 'defense': {
