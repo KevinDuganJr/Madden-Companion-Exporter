@@ -73,54 +73,51 @@ function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// stats schedules
-app.post(
-    '/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType',
-    (req, res) => {
-        const db = admin.database();
-        const ref = db.ref();
-        const {
-            params: { username, leagueId, weekType, weekNumber, dataType },
-        } = req;
-        const basePath = `data/${username}/${leagueId}/`;
-        // "defense", "kicking", "passing", "punting", "receiving", "rushing"
-        const statsPath = `${basePath}stats`;
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', () => {
-            switch (dataType) {
-                case 'schedules': {
-                    const weekRef = ref.child(`${basePath}schedules/${weekType}/${weekNumber}`);
-                    const { gameScheduleInfoList: schedules } = JSON.parse(body);
-                    weekRef.update(schedules);
-                    break;
-                }
-                case 'teamstats': {
-                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/teamStatInfoList`); 
-                    const { teamStatInfoList: teamStats } = JSON.parse(body);
-                    weekRef.update(teamStats);
-                    break;
-                }
-                case 'defense': {
-                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/playerDefensiveStatInfoList`);
-                    const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
-                    weekRef.update(defensiveStats);
-                    break;
-                }
-                default: {
-                    const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
-                    const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/${property}`);
-                    const stats = JSON.parse(body)[property];
-                    weekRef.update(stats);
-                    break;
-                }
+// schedules and stats
+app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', (req, res) => {
+    const db = admin.database();
+    const ref = db.ref();
+    const { params: { username, leagueId, weekType, weekNumber, dataType }, } = req;
+
+    //const basePath = `${username}/data/week/${weekType}/${weekNumber}/${dataType}`;
+    
+    // "defense", "kicking", "passing", "punting", "receiving", "rushing"
+    
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    req.on('end', () => {
+        switch (dataType) {
+            case 'schedules': {
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
+                const { gameScheduleInfoList: schedules } = JSON.parse(body);
+                weekRef.update(schedules);
+                break;
             }
-            res.sendStatus(200);
-        });
-    }
-);
+            case 'teamstats': {
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
+                const { teamStatInfoList: teamStats } = JSON.parse(body);
+                weekRef.update(teamStats);
+                break;
+            }
+            case 'defense': {
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
+                const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
+                weekRef.update(defensiveStats);
+                break;
+            }
+            default: {
+                const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/${property}`);
+                const stats = JSON.parse(body)[property];
+                weekRef.update(stats);
+                break;
+            }
+        }
+        res.sendStatus(200);
+    });
+});
 
 // free agents
 app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
