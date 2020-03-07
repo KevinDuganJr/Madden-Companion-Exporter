@@ -43,9 +43,20 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { params: { username, leagueId } } = req;
 
         const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
+        
         teamRef.update(teams);
         
+        let bodyStatus = '{ "nine": 9, "ten": 10, "eleven": 11 }';
+        const { uploadStatus : currentStatus } = JSON.parse(bodyStatus);
+        const statusRef = ref.child(`${username}/data/uploadStatus`);
+        statusRef.update(currentStatus);
+
+        
+   
+
         res.sendStatus(200);
+        
+        
     });
 });
 
