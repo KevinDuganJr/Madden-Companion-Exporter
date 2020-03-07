@@ -41,16 +41,8 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     req.on('end', () => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
-
-        const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
-        
+        const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);      
         teamRef.update(teams);
-        
-
-        let mystring = "{ 'myStatus': [ {'Id':1, 'square':1 }] }";
-        const { uploadStatus : myStatus } = JSON.parse(mystring);
-        const statusRef = ref.child(`${username}/data/uploadStatus`);
-        statusRef.update(myStatus);
     
         res.sendStatus(200);       
     });
