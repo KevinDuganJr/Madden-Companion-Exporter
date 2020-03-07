@@ -47,18 +47,12 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         teamRef.update(teams);
         
 
-        var string = "{'key':'value'}";
-
-        const { uploadStatus : currentStatus } = JSON.parse(string);
+        var string = "{'myStatus': [ {'Id':1, 'square':1 }] }";
+        const { uploadStatus : myStatus } = JSON.parse(string);
         const statusRef = ref.child(`${username}/data/uploadStatus`);
-        statusRef.update(currentStatus);
-
-        
-   
-
-        res.sendStatus(200);
-        
-        
+        statusRef.update(myStatus);
+    
+        res.sendStatus(200);       
     });
 });
 
