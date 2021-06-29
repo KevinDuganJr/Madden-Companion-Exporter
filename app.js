@@ -43,7 +43,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { params: { username, leagueId } } = req;
 
         const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
-        teamRef.update(teams);
+        teamRef.set(teams);
         
         res.sendStatus(200);
     });
@@ -62,7 +62,7 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
         const {params: { username, leagueId }} = req;
 
         const teamRef = ref.child(`${username}/data/standings/teamStandingInfoList`);
-        teamRef.update(teams);
+        teamRef.set(teams);
 
         res.sendStatus(200);
     });
@@ -92,26 +92,26 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
             case 'schedules': {
                 const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
                 const { gameScheduleInfoList: schedules } = JSON.parse(body);
-                weekRef.update(schedules);
+                weekRef.set(schedules);
                 break;
             }
             case 'teamstats': {
                 const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
                 const { teamStatInfoList: teamStats } = JSON.parse(body);
-                weekRef.update(teamStats);
+                weekRef.set(teamStats);
                 break;
             }
             case 'defense': {
                 const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
                 const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
-                weekRef.update(defensiveStats);
+                weekRef.set(defensiveStats);
                 break;
             }
             default: {
                 const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
                 const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/${property}`);
                 const stats = JSON.parse(body)[property];
-                weekRef.update(stats);
+                weekRef.set(stats);
                 break;
             }
         }
@@ -131,7 +131,7 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username } } = req;
         const teamRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
-        teamRef.update(teams);
+        teamRef.set(teams);
 
         res.sendStatus(200);
     });       
@@ -149,7 +149,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username, teamId } } = req;
         const teamRef = ref.child(`${username}/data/team/${teamId}/rosterInfoList`);
-        teamRef.update(teams);
+        teamRef.set(teams);
 
         res.sendStatus(200);
     });
