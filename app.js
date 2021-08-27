@@ -40,24 +40,6 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     });
     req.on('end', () => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
-
-        const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
-        teamRef.set(teams);
-        
-        res.sendStatus(200);
-    });
-});
-
-app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
-    const db = admin.database();
-    const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { leagueTeamInfoList: teams } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
         teams.forEach(team => {
