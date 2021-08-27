@@ -43,7 +43,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
 
-        const teamRef = ref.child(`data/${leagueId}/leagueteams/leagueTeamInfoList`);
+        const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
         teamRef.set(teams);
         
         res.sendStatus(200);
