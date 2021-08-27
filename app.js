@@ -31,36 +31,23 @@ app.get('/delete/:user', function(req, res) {
 });
 
 // league teams
-// app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
-//     const db = admin.database();
-//     const ref = db.ref();
-//     let body = '';
-//     req.on('data', chunk => {
-//         body += chunk.toString();
-//     });
-//     req.on('end', () => {
-//         const { leagueTeamInfoList: teams } = JSON.parse(body);
-//         const { params: { username, leagueId } } = req;
-
-//         const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
-//         teamRef.set(teams);
-        
-//         res.sendStatus(200);
-//     });
-// });
-
-app.post('/:platform/:leagueId/leagueteams', (req, res) => {
+app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    const {platform, leagueId} = req.params;
-    const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
-    const {body: {leagueTeamInfoList}} = req;
-  
-    dataRef.set({
-      leagueTeamInfoList
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
     });
-    res.sendStatus(200);
-  });
+    req.on('end', () => {
+        const { leagueTeamInfoList: teams } = JSON.parse(body);
+        const { params: { username, leagueId } } = req;
+
+        const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
+        teamRef.set(teams);
+        
+        res.sendStatus(200);
+    });
+});
 
 
 // standings
