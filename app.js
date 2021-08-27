@@ -52,22 +52,15 @@ app.get('/delete/:user', function(req, res) {
 app.post('/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
+    const {platform, leagueId} = req.params;
+    const dataRef = ref.child(`data/${platform}/${leagueId}/leagueteams`);
+    const {body: {leagueTeamInfoList}} = req;
+  
+    dataRef.set({
+      leagueTeamInfoList
     });
-    req.on('end', () => {
-        const { leagueTeamInfoList: teams } = JSON.parse(body);
-        const {params: { platform, leagueId }} = req;
-
-        teams.forEach(team => {
-            const teamRef = ref.child(`data/${platform}/${leagueId}/teams/${team.teamId}`);
-            teamRef.set(team);
-        });
-
-        res.sendStatus(200);
-    });
-});
+    res.sendStatus(200);
+  });
 
 
 // standings
