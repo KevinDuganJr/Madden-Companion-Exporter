@@ -17,9 +17,9 @@ admin.initializeApp({
 app.set('port', (process.env.PORT || 5000));
 
 // get user 
-app.get('/:user', function(req, res) {
-    return res.send("username is set to " + req.params.user);
-});
+//app.get('/:user', function(req, res) {
+//    return res.send("username is set to " + req.params.user);
+//});
 
 // delete user data
 app.get('/delete/:user', function(req, res) {
