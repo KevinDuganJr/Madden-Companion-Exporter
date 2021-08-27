@@ -49,7 +49,7 @@ app.get('/delete/:user', function(req, res) {
 //     });
 // });
 
-app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
+app.post('/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     let body = '';
@@ -61,7 +61,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const {params: { username, leagueId }} = req;
 
         teams.forEach(team => {
-            const teamRef = ref.child(`data/${username}/${platform}/${leagueId}/teams/${team.teamId}`);
+            const teamRef = ref.child(`data/${platform}/${leagueId}/teams/${team.teamId}`);
             teamRef.set(team);
         });
 
