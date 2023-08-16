@@ -17,12 +17,12 @@ admin.initializeApp({
 app.set('port', (process.env.PORT || 5000));
 
 // get user 
-//app.get('/:user', function(req, res) {
-//    return res.send("username is set to " + req.params.user);
-//});
+app.get('/:user', function(req, res) {
+    return res.send("username is set to " + req.params.user);
+});
 
 app.get('/', function (req, res) {
-      res.send('hello');
+      res.send('CFM Stats');
 });
 
 // delete user data
