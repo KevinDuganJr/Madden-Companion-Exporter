@@ -21,7 +21,7 @@ app.set('port', (process.env.PORT || 5000));
 //    return res.send("username is set to " + req.params.user);
 //});
 app.get('/', function (req, res) {
-  res.render('index', {});
+  res.render('index.html', {});
 });
 
 // delete user data
