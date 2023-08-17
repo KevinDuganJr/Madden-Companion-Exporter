@@ -12,16 +12,8 @@ const serviceAccount = require("./dugan-760bc-firebase-adminsdk-bguij-42efe32ea8
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://dugan-760bc.firebaseio.com"
-});
-
-
-
-
-admin.initializeApp({
-  credential: admin.credential.cert(firebaseConfig),
-  databaseURL: firebaseConfig.databaseURL,
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://dugan-760bc.firebaseio.com"
 });
 
 // Define an example endpoint to fetch data
