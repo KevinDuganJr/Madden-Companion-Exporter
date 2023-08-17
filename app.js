@@ -21,13 +21,13 @@ app.get('/:user', function(req, res) {
     return res.send("username is set to " + req.params.user);
 });
 
-// app.get('/', function (req, res) {
-//      res.send('CFM Stats');
-//});
-
-app.get('*', (req, res) => {
-    res.send('CFM Stats');
+ app.get('/', function (req, res) {
+      res.send('CFM Stats');
 });
+
+//app.get('*', (req, res) => {
+//    res.send('CFM Stats');
+//});
 
 // delete user data
 app.get('/delete/:user', function(req, res) {
