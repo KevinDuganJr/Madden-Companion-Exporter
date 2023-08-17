@@ -16,35 +16,8 @@ admin.initializeApp({
 
 app.set('port', (process.env.PORT || 3001));
 
-// testing
-const endpoints = [];
-
-app.use((req, res, next) => {
-    const endpoint = req.originalUrl;
-    if (!endpoints.includes(endpoint)) {
-        endpoints.push(endpoint);
-    }
-    next();
-});
-
-// Your existing routes here...
-
-// Route to get the endpoints
-app.get('/endpoints', (req, res) => {         
-    res.json(endpoints);
-});
-
-app.listen(app.get('port'), () =>
-    console.log('Madden Data is running on port', app.get('port'))
-);
-
-// testing
-
-
-
-
 app.get('*', (req, res) => {
-    res.send('Madden Companion Exporter');
+    res.send('CFM Stats → Madden Companion Exporter');
 });
 
 app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
@@ -220,5 +193,5 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
 });
 
 app.listen(app.get('port'), () =>
-    console.log('Madden Data is running on port', app.get('port'))
+    console.log('CFM Stats → Madden Companion Exporter is running on port', app.get('port'))
 );
