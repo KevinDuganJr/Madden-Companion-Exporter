@@ -1,19 +1,3 @@
-const endpoints = []; // Array to store the endpoints
-
-// Middleware to log endpoints
-app.use((req, res, next) => {
-    const endpoint = req.originalUrl; // Getting the original URL
-    if (!endpoints.includes(endpoint)) {
-        endpoints.push(endpoint); // Adding to the array if not already present
-    }
-    next(); // Continue to the next middleware or route handler
-});
-
-app.get('/endpoints', (req, res) => {
-    res.json(endpoints);
-});
-
-
 const express = require('express');
 const app = express();
 
