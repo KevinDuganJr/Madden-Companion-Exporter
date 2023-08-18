@@ -32,7 +32,7 @@ app.get('/delete/:user', function(req, res) {
 });
 
 // league teams TEST
-app.post('/:username/:platform/:leagueId/leagueSettings', (req, res) => {
+app.post('/:username/:platform/:leagueId/leagueinfo', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     let body = '';
@@ -43,7 +43,7 @@ app.post('/:username/:platform/:leagueId/leagueSettings', (req, res) => {
         const { leagueSettingsInfo: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
 
-        const teamRef = ref.child(`${leagueId}/data/leagueeverything/leagueTeamInfoList`);
+        const teamRef = ref.child(`${leagueId}/data/leagueinfo`);
         teamRef.set(teams);
         
         res.sendStatus(200);
