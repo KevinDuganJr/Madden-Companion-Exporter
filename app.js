@@ -31,8 +31,6 @@ app.get('/delete/:user', function(req, res) {
     return res.send('Madden Data Cleared for ' + req.params.user);
 });
 
-
-
 // league teams
 app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
@@ -45,7 +43,7 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
 
-        const teamRef = ref.child(`${leagueId}/data/leagueteams/myLeagueTeamInfoList`);
+        const teamRef = ref.child(`${username}/data/leagueteams/leagueTeamInfoList`);
         teamRef.set(teams);
         
         res.sendStatus(200);
@@ -65,7 +63,7 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
         const { teamStandingInfoList: teams } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
-        const teamRef = ref.child(`${leagueId}/data/standings/teamStandingInfoList`);
+        const teamRef = ref.child(`${username}/data/standings/teamStandingInfoList`);
         teamRef.set(teams);
 
         res.sendStatus(200);
@@ -94,26 +92,26 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
     req.on('end', () => {
         switch (dataType) {
             case 'schedules': {
-                const weekRef = ref.child(`${leagueId}/data/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
                 const { gameScheduleInfoList: schedules } = JSON.parse(body);
                 weekRef.set(schedules);
                 break;
             }
             case 'teamstats': {
-                const weekRef = ref.child(`${leagueId}/data/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
                 const { teamStatInfoList: teamStats } = JSON.parse(body);
                 weekRef.set(teamStats);
                 break;
             }
             case 'defense': {
-                const weekRef = ref.child(`${leagueId}/data/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
                 const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
                 weekRef.set(defensiveStats);
                 break;
             }
             default: {
                 const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
-                const weekRef = ref.child(`${leagueId}/data/week/${weekType}/${weekNumber}/${dataType}/${property}`);
+                const weekRef = ref.child(`${username}/data/week/${weekType}/${weekNumber}/${dataType}/${property}`);
                 const stats = JSON.parse(body)[property];
                 weekRef.set(stats);
                 break;
@@ -133,8 +131,8 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     });
     req.on('end', () => {
         const { rosterInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
-        const teamRef = ref.child(`${leagueId}/data/freeagents/rosterInfoList`);
+        const { params: { username } } = req;
+        const teamRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
         teamRef.set(teams);
 
         res.sendStatus(200);
@@ -151,8 +149,8 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     });
     req.on('end', () => {
         const { rosterInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId, teamId } } = req;
-        const teamRef = ref.child(`${leagueId}/data/team/${teamId}/rosterInfoList`);
+        const { params: { username, teamId } } = req;
+        const teamRef = ref.child(`${username}/data/team/${teamId}/rosterInfoList`);
         teamRef.set(teams);
 
         res.sendStatus(200);
