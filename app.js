@@ -122,22 +122,22 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
 });
 
 // free agents
- app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-    const db = admin.database();
-    const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { rosterInfoList: teams } = JSON.parse(body);
-        const { params: { username } } = req;
-        const teamRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
-        teamRef.set(teams);
-
-        res.sendStatus(200);
-    });       
-});
+//app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
+//    const db = admin.database();
+//    const ref = db.ref();
+//    let body = '';
+//    req.on('data', chunk => {
+//        body += chunk.toString();
+//    });
+//    req.on('end', () => {
+//        const { rosterInfoList: teams } = JSON.parse(body);
+//        const { params: { username } } = req;
+//        const teamRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
+//        teamRef.set(teams);
+//
+//        res.sendStatus(200);
+//    });       
+//});
 
 // team rosters
 app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
