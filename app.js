@@ -17,9 +17,9 @@ admin.initializeApp({
 app.set('port', (process.env.PORT || 5000));
 //app.set('port', (process.env.PORT || 3001));
 
-app.get('*', (req, res) => {
-    res.send('CFM Stats Exporter Status → Online!');
-});
+//app.get('*', (req, res) => {
+//    res.send('CFM Stats Exporter Status → Online!');
+//});
 
 
 // get user 
