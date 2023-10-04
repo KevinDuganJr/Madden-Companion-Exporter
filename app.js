@@ -14,8 +14,8 @@ admin.initializeApp({
     databaseURL: "https://dugan-760bc.firebaseio.com"
 });
 
-//app.set('port', (process.env.PORT || 5000));
-app.set('port', (process.env.PORT || 3001));
+app.set('port', (process.env.PORT || 5000));
+//app.set('port', (process.env.PORT || 3001));
 
 app.get('*', (req, res) => {
     res.send('CFM Stats Exporter Status → Online!');
@@ -128,23 +128,21 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
 });
 
 // free agents
-app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
-res.sendStatus(200);
-    
-//    const db = admin.database();
-//    const ref = db.ref();
-//    let body = '';
-//    req.on('data', chunk => {
-//        body += chunk.toString();
-//    });
-//    req.on('end', () => {
-//        const { rosterInfoList: teams } = JSON.parse(body);
-//        const { params: { username } } = req;
-//        const teamRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
-//        teamRef.set(teams);
-//
-//        res.sendStatus(200);
-//    });       
+app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {   
+    const db = admin.database();
+    const ref = db.ref();
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    req.on('end', () => {
+        const { rosterInfoList: teams } = JSON.parse(body);
+        const { params: { username } } = req;
+        const teamRef = ref.child(`${username}/data/freeagents/rosterInfoList`);
+        teamRef.set(teams);
+
+        res.sendStatus(200);
+    });       
 });
 
 // team rosters
