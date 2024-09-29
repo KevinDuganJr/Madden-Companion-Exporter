@@ -128,7 +128,7 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
 });
 
 // free agents
-app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {   
+app.post('/:username/:platform/:leagueId/freeagent/roster', (req, res) => {   
     const db = admin.database();
     const ref = db.ref();
     let body = '';
