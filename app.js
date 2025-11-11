@@ -1,7 +1,10 @@
 const express = require('express');
 const admin = require("firebase-admin");
+const axios = require('axios');
 
 const app = express();
+
+app.use(express.json()); // <-- allow JSON body parsing for the fetch endpoint
 
 // TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
@@ -190,6 +193,36 @@ app.post('/:username/:platform/:leagueId/league', (req, res) => {
             res.status(400).send('invalid json');
         }
     });
+});
+
+// server-side fetch of EA "getLeagueInfo" and store availableWeekInfoList
+// POST /:username/:platform/:leagueId/fetch-league-info
+// body: { "url": "https://ea-api/whatever", "headers": { "Cookie": "...", "Authorization": "Bearer ..." } }
+app.post('/:username/:platform/:leagueId/fetch-league-info', async (req, res) => {
+    const { url, headers } = req.body || {};
+    const { leagueId } = req.params;
+
+    if (!url) return res.status(400).send('missing url in request body');
+
+    try {
+        const resp = await axios.get(url, { headers: headers || {} });
+        const payload = resp.data;
+        const { availableWeekInfoList } = payload;
+        const db = admin.database();
+        const ref = db.ref();
+
+        if (availableWeekInfoList) {
+            await ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList);
+        } else {
+            // fallback: save whole payload if list not present
+            await ref.child(`data/${leagueId}/league/info`).set(payload);
+        }
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('fetch-league-info failed:', err && err.message || err);
+        res.status(502).send('failed to fetch league info');
+    }
 });
 
 app.listen(app.get('port'), () =>
