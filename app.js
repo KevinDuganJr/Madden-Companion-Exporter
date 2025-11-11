@@ -164,6 +164,34 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
         res.sendStatus(200);
     });
 });
+
+// league info
+app.post('/:username/:platform/:leagueId/league', (req, res) => {
+    const db = admin.database();
+    const ref = db.ref();
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+        try {
+            const payload = JSON.parse(body);
+            const { availableWeekInfoList } = payload;
+            const { params: { leagueId } } = req;
+
+            // store the availableWeekInfoList (falls back to storing whole payload if list missing)
+            if (availableWeekInfoList) {
+                ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList);
+            } else {
+                ref.child(`data/${leagueId}/league/info`).set(payload);
+            }
+
+            res.sendStatus(200);
+        } catch (err) {
+            console.error('Failed to parse league payload:', err);
+            res.status(400).send('invalid json');
+        }
+    });
+});
+
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
 );
