@@ -164,32 +164,37 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
         res.sendStatus(200);
     });
 });
-
-// league info
-app.post('/:username/:platform/:leagueId/league', (req, res) => {
+ 
+// server-side endpoint to receive EA getLeague JSON and store availableWeekInfoList
+// use express.json() only for this route so it doesn't interfere with existing raw handlers
+app.post('/:username/:platform/:leagueId/league', express.json(), (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-        try {
-            const payload = JSON.parse(body);
-            const { availableWeekInfoList } = payload;
-            const { params: { leagueId } } = req;
+    const { leagueId } = req.params;
+    const payload = req.body;
 
-            // store the availableWeekInfoList (falls back to storing whole payload if list missing)
-            if (availableWeekInfoList) {
-                ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList);
-            } else {
-                ref.child(`data/${leagueId}/league/info`).set(payload);
-            }
+    if (!payload || Object.keys(payload).length === 0) {
+        return res.status(400).send('missing json body');
+    }
 
-            res.sendStatus(200);
-        } catch (err) {
-            console.error('Failed to parse league payload:', err);
-            res.status(400).send('invalid json');
-        }
-    });
+    const { availableWeekInfoList } = payload;
+
+    if (availableWeekInfoList) {
+        ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList)
+            .then(() => res.sendStatus(200))
+            .catch(err => {
+                console.error('write failed:', err);
+                res.status(500).send('db_write_failed');
+            });
+    } else {
+        // fallback: save full payload for inspection
+        ref.child(`data/${leagueId}/league/info`).set(payload)
+            .then(() => res.sendStatus(200))
+            .catch(err => {
+                console.error('write failed:', err);
+                res.status(500).send('db_write_failed');
+            });
+    }
 });
 
 app.listen(app.get('port'), () =>
