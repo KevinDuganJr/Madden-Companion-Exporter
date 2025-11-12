@@ -164,10 +164,8 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
         res.sendStatus(200);
     });
 });
- 
-// server-side endpoint to receive EA getLeague JSON and store availableWeekInfoList
-// use express.json() only for this route so it doesn't interfere with existing raw handlers
-app.post('/:username/:platform/:leagueId/league', express.json(), (req, res) => {
+
+app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }), (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { leagueId } = req.params;
@@ -176,25 +174,21 @@ app.post('/:username/:platform/:leagueId/league', express.json(), (req, res) => 
     if (!payload || Object.keys(payload).length === 0) {
         return res.status(400).send('missing json body');
     }
-
+    
     const { availableWeekInfoList } = payload;
+    const writes = [];
 
+    writes.push(ref.child(`data/${leagueId}/extra`).set(payload));
     if (availableWeekInfoList) {
-        ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList)
-            .then(() => res.sendStatus(200))
-            .catch(err => {
-                console.error('write failed:', err);
-                res.status(500).send('db_write_failed');
-            });
-    } else {
-        // fallback: save full payload for inspection
-        ref.child(`data/${leagueId}/league/info`).set(payload)
-            .then(() => res.sendStatus(200))
-            .catch(err => {
-                console.error('write failed:', err);
-                res.status(500).send('db_write_failed');
-            });
+        writes.push(ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
     }
+
+    Promise.all(writes)
+        .then(() => res.sendStatus(200))
+        .catch(err => {
+            console.error('write failed:', err);
+            res.status(500).send('db_write_failed');
+        });
 });
 
 app.listen(app.get('port'), () =>
