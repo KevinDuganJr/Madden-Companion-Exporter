@@ -11,14 +11,14 @@ const app = express();
 // TODO: Enter your database url from firebase
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-if (!serviceAccountJsonString) {
+if (!serviceAccountJson) {
   console.error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set or empty!');
   process.exit(1); 
 }
 
 let serviceAccountObject;
 try {
-    serviceAccountObject = JSON.parse(serviceAccountJsonString);
+    serviceAccountObject = JSON.parse(serviceAccountJson);
 } catch (e) {
     console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY environment variable as JSON:', e);
     process.exit(1); 
