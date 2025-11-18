@@ -3,12 +3,7 @@ const admin = require("firebase-admin");
 
 const app = express();
 
-// TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
-
-//const serviceAccount = require("./cfmstats-501b6-firebase-adminsdk-fbsvc-fcf9533ae1.json");
-
-// TODO: Enter your database url from firebase
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
 if (!serviceAccountJson) {
@@ -32,12 +27,6 @@ admin.initializeApp({
 });
 
 app.set('port', (process.env.PORT || 5000));
-//app.set('port', (process.env.PORT || 3001));
-
-//app.get('*', (req, res) => {
-//    res.send('CFM Stats Exporter Status → Online!');
-//});
-
 
 // get user 
 app.get('/:user', function(req, res) {
@@ -66,14 +55,13 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
 
-        // saved under data/<leagueId>/...
-        const teamRef = ref.child(`data/${leagueId}/leagueteams/leagueTeamInfoList`);
+        // saved under <leagueId>/...
+        const teamRef = ref.child(`${leagueId}/leagueteams/leagueTeamInfoList`);
         teamRef.set(teams);
         
         res.sendStatus(200);
     });
 });
-
 
 // standings
 app.post('/:username/:platform/:leagueId/standings', (req, res) => {
@@ -87,7 +75,7 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
         const { teamStandingInfoList: teams } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
-        const teamRef = ref.child(`data/${leagueId}/standings/teamStandingInfoList`);
+        const teamRef = ref.child(`${leagueId}/standings/teamStandingInfoList`);
         teamRef.set(teams);
 
         res.sendStatus(200);
@@ -116,27 +104,26 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
     req.on('end', () => {
         switch (dataType) {
             case 'schedules': {
-                // now saved under data/<leagueId>/week/...
-                const weekRef = ref.child(`data/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
+                const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
                 const { gameScheduleInfoList: schedules } = JSON.parse(body);
                 weekRef.set(schedules);
                 break;
             }
             case 'teamstats': {
-                const weekRef = ref.child(`data/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
+                const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
                 const { teamStatInfoList: teamStats } = JSON.parse(body);
                 weekRef.set(teamStats);
                 break;
             }
             case 'defense': {
-                const weekRef = ref.child(`data/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
+                const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
                 const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
                 weekRef.set(defensiveStats);
                 break;
             }
             default: {
                 const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
-                const weekRef = ref.child(`data/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/${property}`);
+                const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/${property}`);
                 const stats = JSON.parse(body)[property];
                 weekRef.set(stats);
                 break;
@@ -157,7 +144,7 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     req.on('end', () => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
-        const teamRef = ref.child(`data/${leagueId}/freeagents/rosterInfoList`);
+        const teamRef = ref.child(`${leagueId}/freeagents/rosterInfoList`);
         teamRef.set(teams);
 
         res.sendStatus(200);
@@ -175,7 +162,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     req.on('end', () => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId, teamId } } = req;
-        const teamRef = ref.child(`data/${leagueId}/team/${teamId}/rosterInfoList`);
+        const teamRef = ref.child(`${leagueId}/team/${teamId}/rosterInfoList`);
         teamRef.set(teams);
 
         res.sendStatus(200);
@@ -195,9 +182,9 @@ app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }),
     const { availableWeekInfoList } = payload;
     const writes = [];
 
-    writes.push(ref.child(`data/${leagueId}/extra`).set(payload));
+    writes.push(ref.child(`${leagueId}/extra`).set(payload));
     if (availableWeekInfoList) {
-        writes.push(ref.child(`data/${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
+        writes.push(ref.child(`${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
     }
 
     Promise.all(writes)
