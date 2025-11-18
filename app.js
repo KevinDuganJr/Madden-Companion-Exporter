@@ -6,11 +6,13 @@ const app = express();
 // TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
 
-const serviceAccount = require("./cfmstats-501b6-firebase-adminsdk-fbsvc-fcf9533ae1.json");
+//const serviceAccount = require("./cfmstats-501b6-firebase-adminsdk-fbsvc-fcf9533ae1.json");
+
 // TODO: Enter your database url from firebase
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(serviceAccountJson),
     databaseURL: "https://cfmstats-501b6-default-rtdb.firebaseio.com"
 });
 
