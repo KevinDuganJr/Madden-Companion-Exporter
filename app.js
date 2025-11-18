@@ -6,12 +6,12 @@ const app = express();
 // TODO: Enter the path to your service account json file
 // Need help with this step go here: https://firebase.google.com/docs/admin/setup
 
-const serviceAccount = require("./dugan-760bc-firebase-adminsdk-bguij-42efe32ea8.json");
+const serviceAccount = require("./cfmstats-501b6-firebase-adminsdk-fbsvc-fcf9533ae1.json");
 // TODO: Enter your database url from firebase
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://dugan-760bc.firebaseio.com"
+    databaseURL: "https://cfmstats-501b6-default-rtdb.firebaseio.com"
 });
 
 app.set('port', (process.env.PORT || 5000));
