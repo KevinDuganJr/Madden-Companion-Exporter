@@ -11,8 +11,23 @@ const app = express();
 // TODO: Enter your database url from firebase
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
+if (!serviceAccountJsonString) {
+  console.error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set or empty!');
+  process.exit(1); 
+}
+
+let serviceAccountObject;
+try {
+    serviceAccountObject = JSON.parse(serviceAccountJsonString);
+} catch (e) {
+    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY environment variable as JSON:', e);
+    process.exit(1); 
+}
+
+console.log('Firebase Admin SDK initialized successfully!');
+
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountJson),
+    credential: admin.credential.cert(serviceAccountObject),
     databaseURL: "https://cfmstats-501b6-default-rtdb.firebaseio.com"
 });
 
