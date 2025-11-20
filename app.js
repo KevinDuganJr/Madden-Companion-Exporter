@@ -28,58 +28,73 @@ admin.initializeApp({
 
 app.set('port', (process.env.PORT || 5000));
 
-// get user 
+// Use express.json globally so handlers can await req.body
+app.use(express.json({ limit: '5mb' }));
+
+// helper to write per-endpoint export metadata
+async function writeExportMeta(ref, leagueId, dataType, meta) {
+    const metaPath = `${leagueId}/_exports/${dataType}`;
+    // push creates a history; you can also use set() to overwrite latest
+    return ref.child(metaPath).push(meta);
+}
+
+// get user
 app.get('/:user', function (req, res) {
     return res.send("username is set to " + req.params.user);
 });
 
-
 // delete user data
-app.get('/delete/:user', function (req, res) {
+app.get('/delete/:user', async function (req, res) {
     const db = admin.database();
     const ref = db.ref();
     const dataRef = ref.child(req.params.user);
-    dataRef.remove();
-    return res.send('Madden Data Cleared for ' + req.params.user);
+    try {
+        await dataRef.remove();
+        return res.status(200).json({ exported: true, message: 'Madden Data Cleared', user: req.params.user });
+    } catch (err) {
+        console.error('delete failed:', err);
+        return res.status(500).json({ exported: false, error: 'delete_failed' });
+    }
 });
 
 // league teams
-app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
+app.post('/:username/:platform/:leagueId/leagueteams', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { leagueTeamInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
+    const { leagueTeamInfoList: teams } = req.body || {};
+    const { params: { username, leagueId } } = req;
 
-        // saved under <leagueId>/...
-        const teamRef = ref.child(`${leagueId}/leagueteams/leagueTeamInfoList`);
-        teamRef.set(teams);
+    if (!teams) return res.status(400).json({ exported: false, error: 'missing leagueTeamInfoList' });
 
-        res.sendStatus(200);
-    });
+    const teamRef = ref.child(`${leagueId}/leagueteams/leagueTeamInfoList`);
+    try {
+        await teamRef.set(teams);
+        await writeExportMeta(ref, leagueId, 'leagueteams', { exportedAt: Date.now(), username, count: Array.isArray(teams) ? teams.length : null });
+        return res.status(200).json({ exported: true, dataType: 'leagueteams', count: Array.isArray(teams) ? teams.length : null });
+    } catch (err) {
+        console.error('leagueteams write failed:', err);
+        return res.status(500).json({ exported: false, error: 'db_write_failed' });
+    }
 });
 
 // standings
-app.post('/:username/:platform/:leagueId/standings', (req, res) => {
+app.post('/:username/:platform/:leagueId/standings', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { teamStandingInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
+    const { teamStandingInfoList: teams } = req.body || {};
+    const { params: { username, leagueId } } = req;
 
-        const teamRef = ref.child(`${leagueId}/standings/teamStandingInfoList`);
-        teamRef.set(teams);
+    if (!teams) return res.status(400).json({ exported: false, error: 'missing teamStandingInfoList' });
 
-        res.sendStatus(200);
-    });
+    const teamRef = ref.child(`${leagueId}/standings/teamStandingInfoList`);
+    try {
+        await teamRef.set(teams);
+        await writeExportMeta(ref, leagueId, 'standings', { exportedAt: Date.now(), username, count: Array.isArray(teams) ? teams.length : null });
+        return res.status(200).json({ exported: true, dataType: 'standings', count: Array.isArray(teams) ? teams.length : null });
+    } catch (err) {
+        console.error('standings write failed:', err);
+        return res.status(500).json({ exported: false, error: 'db_write_failed' });
+    }
 });
 
 // capitalize first letter
@@ -88,111 +103,119 @@ function capitalizeFirstLetter(string) {
 }
 
 // schedules and stats
-app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', (req, res) => {
+app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    const { params: { username, leagueId, weekType, weekNumber, dataType }, } = req;
+    const { params: { username, leagueId, weekType, weekNumber, dataType } } = req;
+    const body = req.body || {};
 
-    //const basePath = `${username}/data/week/${weekType}/${weekNumber}/${dataType}`;
-
-    // "defense", "kicking", "passing", "punting", "receiving", "rushing"
-
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
+    try {
+        let count = null;
         switch (dataType) {
             case 'schedules': {
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
-                const { gameScheduleInfoList: schedules } = JSON.parse(body);
-                weekRef.set(schedules);
+                const schedules = body.gameScheduleInfoList;
+                if (!schedules) throw new Error('missing gameScheduleInfoList');
+                await weekRef.set(schedules);
+                count = Array.isArray(schedules) ? schedules.length : null;
                 break;
             }
             case 'teamstats': {
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
-                const { teamStatInfoList: teamStats } = JSON.parse(body);
-                weekRef.set(teamStats);
+                const teamStats = body.teamStatInfoList;
+                if (!teamStats) throw new Error('missing teamStatInfoList');
+                await weekRef.set(teamStats);
+                count = Array.isArray(teamStats) ? teamStats.length : null;
                 break;
             }
             case 'defense': {
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
-                const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
-                weekRef.set(defensiveStats);
+                const defensiveStats = body.playerDefensiveStatInfoList;
+                if (!defensiveStats) throw new Error('missing playerDefensiveStatInfoList');
+                await weekRef.set(defensiveStats);
+                count = Array.isArray(defensiveStats) ? defensiveStats.length : null;
                 break;
             }
             default: {
                 const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/${property}`);
-                const stats = JSON.parse(body)[property];
-                weekRef.set(stats);
+                const stats = body[property];
+                if (!stats) throw new Error(`missing ${property}`);
+                await weekRef.set(stats);
+                count = Array.isArray(stats) ? stats.length : null;
                 break;
             }
         }
-        res.sendStatus(200);
-    });
+
+        await writeExportMeta(ref, leagueId, dataType, { exportedAt: Date.now(), username, weekType, weekNumber, count });
+        return res.status(200).json({ exported: true, dataType, weekType, weekNumber, count });
+    } catch (err) {
+        console.error('week write failed:', err);
+        return res.status(500).json({ exported: false, error: err.message || 'db_write_failed' });
+    }
 });
 
 // free agents
-app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
+app.post('/:username/:platform/:leagueId/freeagents/roster', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { rosterInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
-        const teamRef = ref.child(`${leagueId}/freeagents/rosterInfoList`);
-        teamRef.set(teams);
+    const { rosterInfoList: teams } = req.body || {};
+    const { params: { username, leagueId } } = req;
 
-        res.sendStatus(200);
-    });
+    if (!teams) return res.status(400).json({ exported: false, error: 'missing rosterInfoList' });
+
+    const teamRef = ref.child(`${leagueId}/freeagents/rosterInfoList`);
+    try {
+        await teamRef.set(teams);
+        await writeExportMeta(ref, leagueId, 'freeagents_roster', { exportedAt: Date.now(), username, count: Array.isArray(teams) ? teams.length : null });
+        return res.status(200).json({ exported: true, dataType: 'freeagents_roster', count: Array.isArray(teams) ? teams.length : null });
+    } catch (err) {
+        console.error('freeagents write failed:', err);
+        return res.status(500).json({ exported: false, error: 'db_write_failed' });
+    }
 });
 
 // team rosters
-app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
+app.post('/:username/:platform/:leagueId/team/:teamId/roster', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-    req.on('end', () => {
-        const { rosterInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId, teamId } } = req;
-        const teamRef = ref.child(`${leagueId}/team/${teamId}/rosterInfoList`);
-        teamRef.set(teams);
+    const { rosterInfoList: teams } = req.body || {};
+    const { params: { username, leagueId, teamId } } = req;
 
-        res.sendStatus(200);
-    });
+    if (!teams) return res.status(400).json({ exported: false, error: 'missing rosterInfoList' });
+
+    const teamRef = ref.child(`${leagueId}/team/${teamId}/rosterInfoList`);
+    try {
+        await teamRef.set(teams);
+        await writeExportMeta(ref, leagueId, `team_${teamId}_roster`, { exportedAt: Date.now(), username, teamId, count: Array.isArray(teams) ? teams.length : null });
+        return res.status(200).json({ exported: true, dataType: 'team_roster', teamId, count: Array.isArray(teams) ? teams.length : null });
+    } catch (err) {
+        console.error('team roster write failed:', err);
+        return res.status(500).json({ exported: false, error: 'db_write_failed' });
+    }
 });
 
-app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }), (req, res) => {
+app.post('/:username/:platform/:leagueId/extra', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    const { leagueId } = req.params;
+    const { leagueId, username } = req.params;
     const payload = req.body;
 
     if (!payload || Object.keys(payload).length === 0) {
         return res.status(400).send('missing json body');
     }
 
-    //const { availableWeekInfoList } = payload;
     const writes = [];
-
     writes.push(ref.child(`${leagueId}/extra`).set(payload));
-    //if (availableWeekInfoList) {
-    //    writes.push(ref.child(`${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
-    //}
 
-    Promise.all(writes)
-        .then(() => res.sendStatus(200))
-        .catch(err => {
-            console.error('write failed:', err);
-            res.status(500).send('db_write_failed');
-        });
+    try {
+        await Promise.all(writes);
+        await writeExportMeta(ref, leagueId, 'extra', { exportedAt: Date.now(), username });
+        return res.sendStatus(200);
+    } catch (err) {
+        console.error('write failed:', err);
+        return res.status(500).send('db_write_failed');
+    }
 });
 
 app.listen(app.get('port'), () =>
