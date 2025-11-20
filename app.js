@@ -28,6 +28,9 @@ admin.initializeApp({
 
 app.set('port', (process.env.PORT || 5000));
 
+// Add global JSON body parser (avoid manual req.on('data') buffering)
+app.use(express.json({ limit: '25mb' }));
+
 // get user 
 app.get('/:user', function(req, res) {
     return res.send("username is set to " + req.params.user);
@@ -240,35 +243,58 @@ async function ensureProcessingState(leagueId) {
 
 async function tryMarkComplete(leagueId) {
     const db = admin.database();
-    const leagueRef = db.ref(leagueId);
-    // Read league snapshot (compatible with Realtime DB ref)
-    const snapshot = await leagueRef.once('value');
-    if (!snapshot.exists()) return;
-    const data = snapshot.val();
+    const baseRef = db.ref(leagueId);
 
-    // Required nodes
-    if (!data.leagueteams) return;
-    if (!data.standings) return;
-    if (!data.extra) return;
-    if (!data.freeagents) return;
-    // Require all 32 teams
-    if (!data.team || Object.keys(data.team).length < 32) return;
+    // Read only the child paths we need in parallel (much lower memory than reading entire league)
+    const paths = [
+        'leagueteams/leagueTeamInfoList',
+        'standings/teamStandingInfoList',
+        'extra',
+        'freeagents/rosterInfoList',
+        'team'
+    ];
+    const reads = paths.map(p => baseRef.child(p).once('value'));
+    const [leagueTeamsSnap, standingsSnap, extraSnap, freeagentsSnap, teamSnap] = await Promise.all(reads);
 
-    // Atomically mark the status Complete only if it's currently Processing
+    const missing = [];
+    const leagueTeams = leagueTeamsSnap.exists() ? leagueTeamsSnap.val() : null;
+    const standings = standingsSnap.exists() ? standingsSnap.val() : null;
+    const extra = extraSnap.exists() ? extraSnap.val() : null;
+    const freeagents = freeagentsSnap.exists() ? freeagentsSnap.val() : null;
+    const teamObj = teamSnap.exists() ? teamSnap.val() : {};
+
+    if (!Array.isArray(leagueTeams) || leagueTeams.length === 0) missing.push('leagueteams.leagueTeamInfoList');
+    if (!Array.isArray(standings)) missing.push('standings.teamStandingInfoList');
+    if (!extra || Object.keys(extra).length === 0) missing.push('extra');
+    if (!Array.isArray(freeagents)) missing.push('freeagents.rosterInfoList');
+
+    const teamCount = teamObj ? Object.keys(teamObj).length : 0;
+    if (teamCount < 32) missing.push(`team (have ${teamCount})`);
+
+    if (missing.length) {
+        console.log(`League ${leagueId}: not complete yet, missing: ${missing.join(', ')}`);
+        return;
+    }
+
+    // Atomically mark Complete only when status is Processing
     const statusRef = db.ref(`${leagueId}/status`);
+
+    // Diagnostic: read current status first
+    const statusSnapBefore = await statusRef.once('value');
+    console.log(`League ${leagueId}: status BEFORE txn ->`, statusSnapBefore.exists() ? statusSnapBefore.val() : '<missing>');
+
     const txnResult = await statusRef.transaction(current => {
-        if (!current) return; // nothing to do
-        if (current.state !== 'Processing') return; // only transition Processing -> Complete
-        return {
-            ...current,
-            state: 'Complete',
-            completedAt: Date.now()
-        };
+        console.log(`League ${leagueId}: txn callback current ->`, current);
+        if (!current) return;                       // abort if no status
+        if (current.state !== 'Processing') return; // abort if not in Processing
+        return { ...current, state: 'Complete', completedAt: Date.now() };
     });
 
-    if (txnResult.committed) {
-        const finalStatus = txnResult.snapshot.val();
-        console.log(`League ${leagueId}: Export COMPLETE (version ${finalStatus.exportVersion})`);
+    console.log(`League ${leagueId}: txnResult ->`, txnResult);
+    if (txnResult && txnResult.committed) {
+        console.log(`League ${leagueId}: Export COMPLETE (version ${txnResult.snapshot.val().exportVersion})`);
+    } else {
+        console.log(`League ${leagueId}: tx not committed; final status ->`, txnResult && txnResult.snapshot ? txnResult.snapshot.val() : '<no snapshot>');
     }
  }
 
