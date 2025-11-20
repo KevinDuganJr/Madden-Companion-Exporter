@@ -169,7 +169,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     });
 });
 
-app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }), (req, res) => {
+app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }), async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { leagueId } = req.params;
@@ -183,36 +183,20 @@ app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }),
     const writes = [];
 
     writes.push(ref.child(`${leagueId}/extra`).set(payload));
-    if (availableWeekInfoList) {
-        writes.push(ref.child(`${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
-    }
+    // if (availableWeekInfoList) {
+    //     writes.push(ref.child(`${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
+    // }
 
-    Promise.all(writes)
-        .then(() => res.sendStatus(200))
-        .catch(err => {
-            console.error('write failed:', err);
-            res.status(500).send('db_write_failed');
-        });
-});
-
-app.post('/:username/:platform/:leagueId/exportComplete', async (req, res) => {
-    const db = admin.database();
-    const ref = db.ref();
-    const { leagueId } = req.params;
-
-    const status = {
-        state: 'Complete',
-        updatedAt: Date.now()
-    };
-
-    try {
-        await ref.child(`${leagueId}/status`).set(status);
+    try {        
+        await Promise.all(writes);
+        await ref.child(`${leagueId}/status`).set({ state: 'Complete', completedOn: Date.now() });
         return res.sendStatus(200);
     } catch (err) {
-        console.error('failed setting export status:', err);
-        return res.status(500).send('status_write_failed');
+        console.error('write failed:', err);
+        return res.status(500).send('db_write_failed');
     }
 });
+ 
 
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
