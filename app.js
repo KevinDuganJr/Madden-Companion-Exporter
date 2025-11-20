@@ -188,7 +188,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
 
 
 // extra league data
-app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }), async (req, res) => {
+app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '25mb' }), async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { leagueId } = req.params;
