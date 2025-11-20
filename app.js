@@ -195,6 +195,25 @@ app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }),
         });
 });
 
+app.post('/:username/:platform/:leagueId/exportComplete', async (req, res) => {
+    const db = admin.database();
+    const ref = db.ref();
+    const { leagueId } = req.params;
+
+    const status = {
+        state: 'Complete',
+        updatedAt: Date.now()
+    };
+
+    try {
+        await ref.child(`${leagueId}/status`).set(status);
+        return res.sendStatus(200);
+    } catch (err) {
+        console.error('failed setting export status:', err);
+        return res.status(500).send('status_write_failed');
+    }
+});
+
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
 );
