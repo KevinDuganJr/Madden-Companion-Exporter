@@ -51,15 +51,19 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     req.on('data', chunk => {
         body += chunk.toString();
     });
-    req.on('end', () => {
+    req.on('end', async () => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
 
         // saved under <leagueId>/...
         const teamRef = ref.child(`${leagueId}/leagueteams/leagueTeamInfoList`);
-        teamRef.set(teams);
-        
-        res.sendStatus(200);
+        try {
+            await teamRef.set(teams);
+            res.sendStatus(200);
+        } catch (err) {
+            console.error('write failed:', err);
+            res.status(500).send('db_write_failed');
+        }
     });
 });
 
@@ -71,14 +75,18 @@ app.post('/:username/:platform/:leagueId/standings', (req, res) => {
     req.on('data', chunk => {
         body += chunk.toString();
     });
-    req.on('end', () => {
+    req.on('end', async () => {
         const { teamStandingInfoList: teams } = JSON.parse(body);
         const {params: { username, leagueId }} = req;
 
         const teamRef = ref.child(`${leagueId}/standings/teamStandingInfoList`);
-        teamRef.set(teams);
-
-        res.sendStatus(200);
+        try {
+            await teamRef.set(teams);
+            res.sendStatus(200);
+        } catch (err) {
+            console.error('write failed:', err);
+            res.status(500).send('db_write_failed');
+        }
     });
 });
 
@@ -141,13 +149,17 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     req.on('data', chunk => {
         body += chunk.toString();
     });
-    req.on('end', () => {
+    req.on('end', async () => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
         const teamRef = ref.child(`${leagueId}/freeagents/rosterInfoList`);
-        teamRef.set(teams);
-
-        res.sendStatus(200);
+        try {
+            await teamRef.set(teams);
+            res.sendStatus(200);
+        } catch (err) {
+            console.error('write failed:', err);
+            res.status(500).send('db_write_failed');
+        }
     });       
 });
 
@@ -159,13 +171,17 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     req.on('data', chunk => {
         body += chunk.toString();
     });
-    req.on('end', () => {
+    req.on('end', async () => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId, teamId } } = req;
         const teamRef = ref.child(`${leagueId}/team/${teamId}/rosterInfoList`);
-        teamRef.set(teams);
-
-        res.sendStatus(200);
+        try {
+            await teamRef.set(teams);
+            res.sendStatus(200);
+        } catch (err) {
+            console.error('write failed:', err);
+            res.status(500).send('db_write_failed');
+        }
     });
 });
 
@@ -179,7 +195,7 @@ app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }),
         return res.status(400).send('missing json body');
     }
     
-    const { availableWeekInfoList } = payload;
+    //const { availableWeekInfoList } = payload;
     const writes = [];
 
     writes.push(ref.child(`${leagueId}/extra`).set(payload));
