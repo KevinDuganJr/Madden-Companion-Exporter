@@ -241,10 +241,9 @@ async function ensureProcessingState(leagueId) {
 async function tryMarkComplete(leagueId) {
     const db = admin.database();
     const leagueRef = db.ref(leagueId);
-    const snapshot = await leagueRef.get();
-
+    // Read league snapshot (compatible with Realtime DB ref)
+    const snapshot = await leagueRef.once('value');
     if (!snapshot.exists()) return;
-
     const data = snapshot.val();
 
     // Required nodes
@@ -252,26 +251,26 @@ async function tryMarkComplete(leagueId) {
     if (!data.standings) return;
     if (!data.extra) return;
     if (!data.freeagents) return;
-
     // Require all 32 teams
     if (!data.team || Object.keys(data.team).length < 32) return;
 
-    // Update status to Complete
+    // Atomically mark the status Complete only if it's currently Processing
     const statusRef = db.ref(`${leagueId}/status`);
-    const statusSnap = await statusRef.get();
-
-    if (!statusSnap.exists()) return;
-
-    let { exportVersion } = statusSnap.val();
-
-    await statusRef.update({
-        state: "Complete",
-        completedAt: Date.now(),
-        exportVersion
+    const txnResult = await statusRef.transaction(current => {
+        if (!current) return; // nothing to do
+        if (current.state !== 'Processing') return; // only transition Processing -> Complete
+        return {
+            ...current,
+            state: 'Complete',
+            completedAt: Date.now()
+        };
     });
 
-    console.log(`League ${leagueId}: Export COMPLETE (version ${exportVersion})`);
-}
+    if (txnResult.committed) {
+        const finalStatus = txnResult.snapshot.val();
+        console.log(`League ${leagueId}: Export COMPLETE (version ${finalStatus.exportVersion})`);
+    }
+ }
 
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
