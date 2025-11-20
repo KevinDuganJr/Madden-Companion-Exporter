@@ -48,47 +48,44 @@ app.post('/:username/:platform/:leagueId/leagueteams', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
+    req.on('data', chunk => body += chunk.toString());
     req.on('end', async () => {
         const { leagueTeamInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId } } = req;
+        const { leagueId } = req.params;
 
-        // saved under <leagueId>/...
+        await ensureProcessingState(leagueId);
+
         const teamRef = ref.child(`${leagueId}/leagueteams/leagueTeamInfoList`);
-        try {
-            await teamRef.set(teams);
-            res.sendStatus(200);
-        } catch (err) {
-            console.error('write failed:', err);
-            res.status(500).send('db_write_failed');
-        }
+        await teamRef.set(teams);
+
+        await tryMarkComplete(leagueId);
+
+        res.sendStatus(200);
     });
 });
+
 
 // standings
 app.post('/:username/:platform/:leagueId/standings', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
+    req.on('data', chunk => body += chunk.toString());
     req.on('end', async () => {
         const { teamStandingInfoList: teams } = JSON.parse(body);
-        const {params: { username, leagueId }} = req;
+        const { leagueId } = req.params;
+
+        await ensureProcessingState(leagueId);
 
         const teamRef = ref.child(`${leagueId}/standings/teamStandingInfoList`);
-        try {
-            await teamRef.set(teams);
-            res.sendStatus(200);
-        } catch (err) {
-            console.error('write failed:', err);
-            res.status(500).send('db_write_failed');
-        }
+        await teamRef.set(teams);
+
+        await tryMarkComplete(leagueId);
+
+        res.sendStatus(200);
     });
 });
+
 
 // capitalize first letter
 function capitalizeFirstLetter(string) {
@@ -100,43 +97,46 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
     const db = admin.database();
     const ref = db.ref();
     const { params: { username, leagueId, weekType, weekNumber, dataType }, } = req;
-
-    //const basePath = `${username}/data/week/${weekType}/${weekNumber}/${dataType}`;
     
     // "defense", "kicking", "passing", "punting", "receiving", "rushing"
-    
     let body = '';
     req.on('data', chunk => {
         body += chunk.toString();
     });
-    req.on('end', () => {
+    req.on('end', async () => {
+        
+        await ensureProcessingState(leagueId);
+        
         switch (dataType) {
             case 'schedules': {
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
                 const { gameScheduleInfoList: schedules } = JSON.parse(body);
-                weekRef.set(schedules);
+                await weekRef.set(schedules);
                 break;
             }
             case 'teamstats': {
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
                 const { teamStatInfoList: teamStats } = JSON.parse(body);
-                weekRef.set(teamStats);
+                await weekRef.set(teamStats);
                 break;
             }
             case 'defense': {
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
                 const { playerDefensiveStatInfoList: defensiveStats } = JSON.parse(body);
-                weekRef.set(defensiveStats);
+                await weekRef.set(defensiveStats);
                 break;
             }
             default: {
                 const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
                 const weekRef = ref.child(`${leagueId}/week/${weekType}/${weekNumber}/${dataType}/${property}`);
                 const stats = JSON.parse(body)[property];
-                weekRef.set(stats);
+                await weekRef.set(stats);
                 break;
             }
         }
+
+        await tryMarkComplete(leagueId);
+
         res.sendStatus(200);
     });
 });
@@ -152,9 +152,11 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', (req, res) => {
     req.on('end', async () => {
         const { rosterInfoList: teams } = JSON.parse(body);
         const { params: { username, leagueId } } = req;
+        await ensureProcessingState(leagueId);
         const teamRef = ref.child(`${leagueId}/freeagents/rosterInfoList`);
         try {
             await teamRef.set(teams);
+            await tryMarkComplete(leagueId);
             res.sendStatus(200);
         } catch (err) {
             console.error('write failed:', err);
@@ -168,51 +170,108 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     let body = '';
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
+    req.on('data', chunk => body += chunk.toString());
     req.on('end', async () => {
         const { rosterInfoList: teams } = JSON.parse(body);
-        const { params: { username, leagueId, teamId } } = req;
+        const { leagueId, teamId } = req.params;
+
+        await ensureProcessingState(leagueId);
+
         const teamRef = ref.child(`${leagueId}/team/${teamId}/rosterInfoList`);
-        try {
-            await teamRef.set(teams);
-            res.sendStatus(200);
-        } catch (err) {
-            console.error('write failed:', err);
-            res.status(500).send('db_write_failed');
-        }
+        await teamRef.set(teams);
+
+        await tryMarkComplete(leagueId);
+
+        res.sendStatus(200);
     });
 });
 
+
+// extra league data
 app.post('/:username/:platform/:leagueId/extra', express.json({ limit: '5mb' }), async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { leagueId } = req.params;
     const payload = req.body;
 
-    if (!payload || Object.keys(payload).length === 0) {
-        return res.status(400).send('missing json body');
-    }
-    
-    //const { availableWeekInfoList } = payload;
-    const writes = [];
+    if (!payload || Object.keys(payload).length === 0)
+        {
+            return res.status(400).send('missing json body');
+        }
 
+//    const { availableWeekInfoList } = payload;
+
+    await ensureProcessingState(leagueId);
+
+    const writes = [];
     writes.push(ref.child(`${leagueId}/extra`).set(payload));
-    // if (availableWeekInfoList) {
+    // if (availableWeekInfoList)
+    // {
     //     writes.push(ref.child(`${leagueId}/league/availableWeekInfoList`).set(availableWeekInfoList));
     // }
 
-    try {        
-        await Promise.all(writes);
-        await ref.child(`${leagueId}/status`).set({ state: 'Complete', completedOn: Date.now() });
-        return res.sendStatus(200);
-    } catch (err) {
-        console.error('write failed:', err);
-        return res.status(500).send('db_write_failed');
-    }
+    await Promise.all(writes);
+    await tryMarkComplete(leagueId);
+
+    res.sendStatus(200);
 });
  
+// ensure processing state middleware
+async function ensureProcessingState(leagueId) {
+    const db = admin.database();
+    const statusRef = db.ref(`${leagueId}/status`);
+
+    await statusRef.transaction(current => {
+        // If missing or already Complete -> start new cycle
+        if (!current || current.state === "Complete") {
+            const newVersion = current && current.exportVersion ? current.exportVersion + 1 : 1;
+            return {
+                state: "Processing",
+                exportVersion: newVersion,
+                startedAt: Date.now()
+            };
+        }
+        // otherwise leave unchanged
+        return;
+    });
+
+    console.log(`League ${leagueId}: ensureProcessingState executed`);
+}
+
+async function tryMarkComplete(leagueId) {
+    const db = admin.database();
+    const leagueRef = db.ref(leagueId);
+    const snapshot = await leagueRef.get();
+
+    if (!snapshot.exists()) return;
+
+    const data = snapshot.val();
+
+    // Required nodes
+    if (!data.leagueteams) return;
+    if (!data.standings) return;
+    if (!data.extra) return;
+    if (!data.freeagents) return;
+
+    // Require all 32 teams
+    if (!data.team || Object.keys(data.team).length < 32) return;
+
+    // Update status to Complete
+    const statusRef = db.ref(`${leagueId}/status`);
+    const statusSnap = await statusRef.get();
+
+    if (!statusSnap.exists()) return;
+
+    let { exportVersion } = statusSnap.val();
+
+    await statusRef.update({
+        state: "Complete",
+        completedAt: Date.now(),
+        exportVersion
+    });
+
+    console.log(`League ${leagueId}: Export COMPLETE (version ${exportVersion})`);
+}
 
 app.listen(app.get('port'), () =>
     console.log('Madden Data is running on port', app.get('port'))
