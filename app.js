@@ -31,13 +31,6 @@ app.set('port', (process.env.PORT || 5000));
 // Use express.json globally so handlers can await req.body
 app.use(express.json({ limit: '5mb' }));
 
-// helper to write per-endpoint export metadata
-async function writeExportMeta(ref, leagueId, dataType, meta) {
-    const metaPath = `${leagueId}/_exports/${dataType}`;
-    // push creates a history; you can also use set() to overwrite latest
-    return ref.child(metaPath).push(meta);
-}
-
 // get user
 app.get('/:user', function (req, res) {
     return res.send("username is set to " + req.params.user);
@@ -69,7 +62,6 @@ app.post('/:username/:platform/:leagueId/leagueteams', async (req, res) => {
     const teamRef = ref.child(`${leagueId}/leagueteams/leagueTeamInfoList`);
     try {
         await teamRef.set(teams);
-        await writeExportMeta(ref, leagueId, 'leagueteams', { exportedAt: Date.now(), username, count: Array.isArray(teams) ? teams.length : null });
         return res.status(200).json({ exported: true, dataType: 'leagueteams', count: Array.isArray(teams) ? teams.length : null });
     } catch (err) {
         console.error('leagueteams write failed:', err);
@@ -89,7 +81,6 @@ app.post('/:username/:platform/:leagueId/standings', async (req, res) => {
     const teamRef = ref.child(`${leagueId}/standings/teamStandingInfoList`);
     try {
         await teamRef.set(teams);
-        await writeExportMeta(ref, leagueId, 'standings', { exportedAt: Date.now(), username, count: Array.isArray(teams) ? teams.length : null });
         return res.status(200).json({ exported: true, dataType: 'standings', count: Array.isArray(teams) ? teams.length : null });
     } catch (err) {
         console.error('standings write failed:', err);
@@ -147,7 +138,6 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
             }
         }
 
-        await writeExportMeta(ref, leagueId, dataType, { exportedAt: Date.now(), username, weekType, weekNumber, count });
         return res.status(200).json({ exported: true, dataType, weekType, weekNumber, count });
     } catch (err) {
         console.error('week write failed:', err);
@@ -167,7 +157,6 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', async (req, res) =>
     const teamRef = ref.child(`${leagueId}/freeagents/rosterInfoList`);
     try {
         await teamRef.set(teams);
-        await writeExportMeta(ref, leagueId, 'freeagents_roster', { exportedAt: Date.now(), username, count: Array.isArray(teams) ? teams.length : null });
         return res.status(200).json({ exported: true, dataType: 'freeagents_roster', count: Array.isArray(teams) ? teams.length : null });
     } catch (err) {
         console.error('freeagents write failed:', err);
@@ -187,7 +176,6 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', async (req, res) 
     const teamRef = ref.child(`${leagueId}/team/${teamId}/rosterInfoList`);
     try {
         await teamRef.set(teams);
-        await writeExportMeta(ref, leagueId, `team_${teamId}_roster`, { exportedAt: Date.now(), username, teamId, count: Array.isArray(teams) ? teams.length : null });
         return res.status(200).json({ exported: true, dataType: 'team_roster', teamId, count: Array.isArray(teams) ? teams.length : null });
     } catch (err) {
         console.error('team roster write failed:', err);
@@ -195,6 +183,7 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', async (req, res) 
     }
 });
 
+// extra league information
 app.post('/:username/:platform/:leagueId/extra', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
@@ -210,7 +199,6 @@ app.post('/:username/:platform/:leagueId/extra', async (req, res) => {
 
     try {
         await Promise.all(writes);
-        await writeExportMeta(ref, leagueId, 'extra', { exportedAt: Date.now(), username });
         return res.sendStatus(200);
     } catch (err) {
         console.error('write failed:', err);
