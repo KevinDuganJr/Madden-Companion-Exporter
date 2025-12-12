@@ -31,19 +31,19 @@ app.set('port', (process.env.PORT || 5000));
 // Use express.json globally so handlers can await req.body
 app.use(express.json({ limit: '5mb' }));
 
-// get user
-app.get('/:user', function (req, res) {
-    return res.send("username is set to " + req.params.user);
+// get export id
+app.get('/:exportId', function (req, res) {
+    return res.send("exportId is set to " + req.params.exportId);
 });
 
-// delete user data
-app.get('/delete/:user', async function (req, res) {
+// delete export data
+app.get('/delete/:exportId', async function (req, res) {
     const db = admin.database();
     const ref = db.ref();
-    const dataRef = ref.child(req.params.user);
+    const dataRef = ref.child(req.params.exportId);
     try {
         await dataRef.remove();
-        return res.status(200).json({ exported: true, message: 'Madden Data Cleared', user: req.params.user });
+        return res.status(200).json({ exported: true, message: 'Madden Data Cleared', exportId: req.params.exportId });
     } catch (err) {
         console.error('delete failed:', err);
         return res.status(500).json({ exported: false, error: 'delete_failed' });
@@ -51,15 +51,15 @@ app.get('/delete/:user', async function (req, res) {
 });
 
 // league teams
-app.post('/:username/:platform/:leagueId/leagueteams', async (req, res) => {
+app.post('/:exportId/:platform/:leagueId/leagueteams', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { leagueTeamInfoList: teams } = req.body || {};
-    const { params: { username, leagueId } } = req;
+    const { params: { exportId, leagueId } } = req;
 
     if (!teams) return res.status(400).json({ exported: false, error: 'missing leagueTeamInfoList' });
 
-    const teamRef = ref.child(`${username}/leagueteams/leagueTeamInfoList`);
+    const teamRef = ref.child(`${exportId}/${leagueId}/leagueteams/leagueTeamInfoList`);
     try {
         await teamRef.set(teams);
         return res.status(200).json({ exported: true, dataType: 'leagueteams', count: Array.isArray(teams) ? teams.length : null });
@@ -70,15 +70,15 @@ app.post('/:username/:platform/:leagueId/leagueteams', async (req, res) => {
 });
 
 // standings
-app.post('/:username/:platform/:leagueId/standings', async (req, res) => {
+app.post('/:exportId/:platform/:leagueId/standings', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { teamStandingInfoList: teams } = req.body || {};
-    const { params: { username, leagueId } } = req;
+    const { params: { exportId, leagueId } } = req;
 
     if (!teams) return res.status(400).json({ exported: false, error: 'missing teamStandingInfoList' });
 
-    const teamRef = ref.child(`${username}/standings/teamStandingInfoList`);
+    const teamRef = ref.child(`${exportId}/${leagueId}/standings/teamStandingInfoList`);
     try {
         await teamRef.set(teams);
         return res.status(200).json({ exported: true, dataType: 'standings', count: Array.isArray(teams) ? teams.length : null });
@@ -94,17 +94,17 @@ function capitalizeFirstLetter(string) {
 }
 
 // schedules and stats
-app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', async (req, res) => {
+app.post('/:exportId/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    const { params: { username, leagueId, weekType, weekNumber, dataType } } = req;
+    const { params: { exportId, leagueId, weekType, weekNumber, dataType } } = req;
     const body = req.body || {};
 
     try {
         let count = null;
         switch (dataType) {
             case 'schedules': {
-                const weekRef = ref.child(`${username}/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
+                const weekRef = ref.child(`${exportId}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/gameScheduleInfoList`);
                 const schedules = body.gameScheduleInfoList;
                 if (!schedules) throw new Error('missing gameScheduleInfoList');
                 await weekRef.set(schedules);
@@ -112,7 +112,7 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
                 break;
             }
             case 'teamstats': {
-                const weekRef = ref.child(`${username}/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
+                const weekRef = ref.child(`${exportId}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/teamStatInfoList`);
                 const teamStats = body.teamStatInfoList;
                 if (!teamStats) throw new Error('missing teamStatInfoList');
                 await weekRef.set(teamStats);
@@ -120,7 +120,7 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
                 break;
             }
             case 'defense': {
-                const weekRef = ref.child(`${username}/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
+                const weekRef = ref.child(`${exportId}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/playerDefensiveStatInfoList`);
                 const defensiveStats = body.playerDefensiveStatInfoList;
                 if (!defensiveStats) throw new Error('missing playerDefensiveStatInfoList');
                 await weekRef.set(defensiveStats);
@@ -129,7 +129,7 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
             }
             default: {
                 const property = `player${capitalizeFirstLetter(dataType)}StatInfoList`;
-                const weekRef = ref.child(`${username}/week/${weekType}/${weekNumber}/${dataType}/${property}`);
+                const weekRef = ref.child(`${exportId}/${leagueId}/week/${weekType}/${weekNumber}/${dataType}/${property}`);
                 const stats = body[property];
                 if (!stats) throw new Error(`missing ${property}`);
                 await weekRef.set(stats);
@@ -146,15 +146,15 @@ app.post('/:username/:platform/:leagueId/week/:weekType/:weekNumber/:dataType', 
 });
 
 // free agents
-app.post('/:username/:platform/:leagueId/freeagents/roster', async (req, res) => {
+app.post('/:exportId/:platform/:leagueId/freeagents/roster', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { rosterInfoList: teams } = req.body || {};
-    const { params: { username, leagueId } } = req;
+    const { params: { exportId, leagueId } } = req;
 
     if (!teams) return res.status(400).json({ exported: false, error: 'missing rosterInfoList' });
 
-    const teamRef = ref.child(`${username}/freeagents/rosterInfoList`);
+    const teamRef = ref.child(`${exportId}/${leagueId}/freeagents/rosterInfoList`);
     try {
         await teamRef.set(teams);
         return res.status(200).json({ exported: true, dataType: 'freeagents_roster', count: Array.isArray(teams) ? teams.length : null });
@@ -165,15 +165,15 @@ app.post('/:username/:platform/:leagueId/freeagents/roster', async (req, res) =>
 });
 
 // team rosters
-app.post('/:username/:platform/:leagueId/team/:teamId/roster', async (req, res) => {
+app.post('/:exportId/:platform/:leagueId/team/:teamId/roster', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
     const { rosterInfoList: teams } = req.body || {};
-    const { params: { username, leagueId, teamId } } = req;
+    const { params: { exportId, leagueId, teamId } } = req;
 
     if (!teams) return res.status(400).json({ exported: false, error: 'missing rosterInfoList' });
 
-    const teamRef = ref.child(`${username}/team/${teamId}/rosterInfoList`);
+    const teamRef = ref.child(`${exportId}/${leagueId}/team/${teamId}/rosterInfoList`);
     try {
         await teamRef.set(teams);
         return res.status(200).json({ exported: true, dataType: 'team_roster', teamId, count: Array.isArray(teams) ? teams.length : null });
@@ -184,10 +184,10 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', async (req, res) 
 });
 
 // extra league information
-app.post('/:username/:platform/:leagueId/extra', async (req, res) => {
+app.post('/:exportId/:platform/:leagueId/extra', async (req, res) => {
     const db = admin.database();
     const ref = db.ref();
-    const { leagueId, username } = req.params;
+    const { leagueId, exportId } = req.params;
     const payload = req.body;
 
     if (!payload || Object.keys(payload).length === 0) {
@@ -195,7 +195,7 @@ app.post('/:username/:platform/:leagueId/extra', async (req, res) => {
     }
 
     const writes = [];
-    writes.push(ref.child(`${username}/extra`).set(payload));
+    writes.push(ref.child(`${exportId}/${leagueId}/extra`).set(payload));
 
     try {
         await Promise.all(writes);
