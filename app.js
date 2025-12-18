@@ -23,7 +23,7 @@ console.log('Firebase Admin SDK initialized successfully!');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccountObject),
-    databaseURL: "https://cfmstats-501b6-default-rtdb.firebaseio.com"
+    databaseURL: "https://dugan-760bc.firebaseio.com"
 });
 
 app.set('port', (process.env.PORT || 5000));
