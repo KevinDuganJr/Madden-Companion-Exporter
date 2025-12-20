@@ -173,6 +173,31 @@ app.post('/:username/:platform/:leagueId/team/:teamId/roster', (req, res) => {
         res.sendStatus(200);
     });
 });
+
+// extra league information
+app.post('/:username/:platform/:leagueId/extra', async (req, res) => {
+    const db = admin.database();
+    const ref = db.ref();
+    const { leagueId, exportId } = req.params;
+    const payload = req.body;
+
+    if (!payload || Object.keys(payload).length === 0) {
+        return res.status(400).send('missing json body');
+    }
+
+    const writes = [];
+    writes.push(ref.child(`${username}/${leagueId}/extra`).set(payload));
+
+    try {
+        await Promise.all(writes);
+        return res.sendStatus(200);
+    } catch (err) {
+        console.error('write failed:', err);
+        return res.status(500).send('db_write_failed');
+    }
+});
+
+
 app.listen(app.get('port'), () =>
     console.log('Madden Exporter is running on port', app.get('port'))
 );
